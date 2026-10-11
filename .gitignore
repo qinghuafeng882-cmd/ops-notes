@@ -1,0 +1,13 @@
+# 防止误提交
+*.log
+*.pcap
+*.key
+*.pem
+.env
+*.png
+*.jpg
+*.jpeg
+*.zip
+*.tar.gz
+.DS_Store
+Thumbs.db
