@@ -9,6 +9,7 @@
 | `labs/` | 每次实验一页笔记 | `YYYY-MM-DD-主题.md`，如 `2026-10-12-lvm-extend.md` |
 | `troubleshooting/` | 过往排障经历的脱敏复盘 | `主题.md`，如 `l2-loop-remediation.md` |
 | `skills/` | 写给 AI 执行的固定流程 | `动作名.md`，如 `lab-wrapup.md` |
+| `cheatsheets/` | 每周一页速查表（周测开卷时用） | `weekN-主题.md` |
 
 每个目录下的 `_template.md` 是模板，新建笔记时复制一份。
 
@@ -34,6 +35,8 @@
 | W2 | 10-10 | systemd | [链接](labs/2026-10-10-systemd.md) |
 | W2 | 10-11 | 日志 | [链接](labs/2026-10-11-logs-journald-rsyslog-logrotate.md) |
 | W2 | 10-12 | 第 2 周周测（进行中） | [链接](labs/2026-10-12-week2-exam.md) |
+
+速查表：[W1 命令行与文本处理](cheatsheets/week1-cli-text.md) · [W2 系统管理](cheatsheets/week2-sysadmin.md)
 
 ## 日常用法
 

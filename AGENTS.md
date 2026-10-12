@@ -15,6 +15,7 @@
 - `labs/`：实验笔记
 - `troubleshooting/`：排障复盘（已脱敏）
 - `skills/`：可复用流程
+- `cheatsheets/`：每周速查表，每学完一课把新内容补进当周的速查表
 
 ## 可用 Skill
 
