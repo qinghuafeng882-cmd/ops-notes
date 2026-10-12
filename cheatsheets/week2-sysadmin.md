@@ -74,7 +74,9 @@ umask                            # 文件 666、目录 777 再屏蔽
 | SGID | 2 | 目录：新文件继承属组 | 协作目录 |
 | Sticky | 1 | 目录：只能删自己的文件 | `/tmp` |
 
-协作目录：`chgrp webadmins /srv/webdata; chmod 2770`（再加 Sticky 用 `3770`）。
+协作目录：`chgrp webadmins /srv/webdata; chmod 2770`（再加 Sticky 用 `3770`，显示为 `drwxrws--T`）。
+
+大写 `S`/`T` = 对应位置没有 x。文件上的大写 `S` 通常是配置错误；目录上的大写 `T` 只说明其他人没有 x，Sticky 照样生效。
 
 ## 软件包
 
@@ -250,8 +252,10 @@ sudo rsyslogd -N1 && sudo systemctl restart rsyslog
 }
 ```
 
+postrotate 那行：`systemctl kill -s HUP rsyslog.service` 让 systemd 给 rsyslog 发 HUP（不用自己找 PID），rsyslog 收到后重新打开日志文件；`>/dev/null 2>&1` 不输出任何内容；`|| true` 即使命令失败也返回成功，避免 logrotate 报错。用绝对路径是因为定时器运行时 PATH 很少。
+
 ```bash
-sudo logrotate -d /etc/logrotate.d/w2app   # 模拟（新日志第一次会显示不需要轮转）
+sudo logrotate -d /etc/logrotate.d/w2app   # 模拟，会提示拼错的选项；要用 sudo
 sudo logrotate -f /etc/logrotate.d/w2app   # 强制（单独跑不读全局 dateext）
 ```
 
