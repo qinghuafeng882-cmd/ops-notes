@@ -74,7 +74,7 @@ sudo mount -a
 - bind 挂载练习：执行了 `mount --bind / /mnt/rootview/data`，把根又挂到了 rootview 里面的 data 目录上 → `umount /mnt/rootview` 一直 target is busy → 原因是它下面还有一个子挂载，不是有进程在用 → 先卸里层 `umount /mnt/rootview/data`，再卸外层（或 `umount -R`）。本实验要看的路径应是 `/mnt/rootview/mnt/data1`。
 - 对整个根做 `fuser -vm` 会列出几乎所有进程（`-m` 表示"使用这个文件系统的进程"），不能用来判断子挂载问题；普通用户执行还会刷出大量 Permission denied。
 - 达标题：MBR 单位写错（bit/字节、MiB/字节、GiB/TiB），原理是对的。
-- **lsblk 发现：** 原 lab-vg（data-lv）不见了；sde 没有任何签名，sdf 仍是 LVM2_member；`/mnt/inode-lab`、`/mnt/lvm-lab` 都没挂载（它们不在 fstab 里）。（推测）加盘后设备顺序变化或某块旧实验盘被替换，导致 lab-vg 缺一个 PV。待 W3-D2 用 `pvs`/`vgs` 确认。fqh 记得加了三块盘，但只看到 sdg、sdh 两块新盘；磁盘总数 8 = 原 6 块 − 1 + 3，（推测）可能是新盘挂到了原 lab-vg 那块盘的位置上，sde 是新盘。
+- **加盘顶掉了一块旧盘（已解决）：** 现象：只看到 sdg、sdh 两块新盘；lab-vg 消失，sde 无任何签名，sdf 仍是 LVM2_member。排查：VirtualBox 介质管理里属于 node1 的盘有 9 块，SATA 控制器只挂了 8 块，端口数量设置为 8 → 加第三块新盘时顶掉了 lab-vg 的一块 PV。注意：介质管理的"关联到"也统计快照引用，被顶掉的盘仍显示已关联，要看虚拟机"存储"里的端口清单才准确。处理：端口数改为 10，重新挂回旧盘并调整顺序。结果：9 块盘全部识别，`pvs/vgs` 显示 lab-vg 两块 PV 完整，data-lv 已激活（`-wi-a-----`，未挂载）；fstab 按 UUID 写的 /mnt/data1、/mnt/data2 照常挂载。
 
 ## 卡点 / 没想明白的
 
