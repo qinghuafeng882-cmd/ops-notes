@@ -35,8 +35,9 @@
 | W2 | 10-10 | systemd | [链接](labs/2026-10-10-systemd.md) |
 | W2 | 10-11 | 日志 | [链接](labs/2026-10-11-logs-journald-rsyslog-logrotate.md) |
 | W2 | 10-12 | 第 2 周周测 | [链接](labs/2026-10-12-week2-exam.md) |
+| W3 | 10-13 | 磁盘、分区、文件系统、挂载 | [链接](labs/2026-10-13-disk-partition-fs-mount.md) |
 
-速查表：[W1 命令行与文本处理](cheatsheets/week1-cli-text.md) · [W2 系统管理](cheatsheets/week2-sysadmin.md)
+速查表：[W1 命令行与文本处理](cheatsheets/week1-cli-text.md) · [W2 系统管理](cheatsheets/week2-sysadmin.md) · [W3 存储](cheatsheets/week3-storage.md)
 
 ## 日常用法
 
