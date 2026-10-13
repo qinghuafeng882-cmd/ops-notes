@@ -75,7 +75,9 @@ sudo mount -o ro /dev/sdg1 /mnt/data1
 sudo umount /mnt/data1                 # target is busy → 先 cd 出去
 sudo fuser -vm /mnt/data1              # 谁在用
 sudo lsof /mnt/data1
-sudo mount --bind / /mnt/rootview      # 查看被挂载盖住的根分区目录
+sudo mount --bind / /mnt/rootview      # 查看被挂载盖住的根分区目录：ls /mnt/rootview/<原挂载点路径>
+findmnt -R /mnt/rootview               # 查看下面有没有子挂载
+sudo umount -R /mnt/rootview           # 连同子挂载一起卸载（busy 可能是子挂载导致）
 ```
 
 ## /etc/fstab

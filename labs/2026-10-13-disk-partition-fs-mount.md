@@ -70,9 +70,11 @@ sudo mount -a
 - 热身：`systemctl restart daemon-reload` → `daemon-reload` 是 systemctl 的子命令，不是服务。
 - 热身：sshd 原单元里本来就有 `Restart=on-failure`，drop-in 是重复配置（`systemctl cat` 里能看到）。
 - `echo "...0 0 | sudo tee -a /etc/fstab` 引号没闭合 → 出现 `>` 续行提示符 → Ctrl-C 重写。
-- `findmnt --verity` 拼错。
+- `findmnt --verity` 拼错；`umonut` 拼错。
+- bind 挂载练习：执行了 `mount --bind / /mnt/rootview/data`，把根又挂到了 rootview 里面的 data 目录上 → `umount /mnt/rootview` 一直 target is busy → 原因是它下面还有一个子挂载，不是有进程在用 → 先卸里层 `umount /mnt/rootview/data`，再卸外层（或 `umount -R`）。本实验要看的路径应是 `/mnt/rootview/mnt/data1`。
+- 对整个根做 `fuser -vm` 会列出几乎所有进程（`-m` 表示"使用这个文件系统的进程"），不能用来判断子挂载问题；普通用户执行还会刷出大量 Permission denied。
 - 达标题：MBR 单位写错（bit/字节、MiB/字节、GiB/TiB），原理是对的。
-- **lsblk 发现：** 原 lab-vg（data-lv）不见了；sde 没有任何签名，sdf 仍是 LVM2_member；`/mnt/inode-lab`、`/mnt/lvm-lab` 都没挂载（它们不在 fstab 里）。（推测）加盘后设备顺序变化或某块旧实验盘被替换，导致 lab-vg 缺一个 PV。待 W3-D2 用 `pvs`/`vgs` 确认。
+- **lsblk 发现：** 原 lab-vg（data-lv）不见了；sde 没有任何签名，sdf 仍是 LVM2_member；`/mnt/inode-lab`、`/mnt/lvm-lab` 都没挂载（它们不在 fstab 里）。（推测）加盘后设备顺序变化或某块旧实验盘被替换，导致 lab-vg 缺一个 PV。待 W3-D2 用 `pvs`/`vgs` 确认。fqh 记得加了三块盘，但只看到 sdg、sdh 两块新盘；磁盘总数 8 = 原 6 块 − 1 + 3，（推测）可能是新盘挂到了原 lab-vg 那块盘的位置上，sde 是新盘。
 
 ## 卡点 / 没想明白的
 
