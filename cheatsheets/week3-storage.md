@@ -103,3 +103,50 @@ systemctl list-units --type=mount
 | `noatime` / `noexec` / `ro` | 不更新访问时间 / 禁止执行 / 只读 |
 
 ⚠️ 用 `UUID=` 不用 `/dev/sdX`；挂载点目录要先建好；重新格式化后 UUID 会变；fstab 有错误重启会进紧急模式 → 重启前必须三步检查。
+
+## LVM
+
+```bash
+sudo pvs; sudo vgs; sudo lvs           # Attr 第5位 a=激活，第6位 o=已挂载
+sudo lvs -o +devices                   # LV 的 PE 在哪些盘上
+sudo pvs -o +pv_used
+sudo vgdisplay vg                      # PE Size、Free PE
+```
+
+| | PV | VG | LV |
+|---|---|---|---|
+| 查看 | pvs / pvdisplay | vgs / vgdisplay | lvs / lvdisplay |
+| 创建 | pvcreate | vgcreate | lvcreate |
+| 删除 | pvremove | vgremove | lvremove |
+| 扩大 / 缩小 | — | vgextend / vgreduce | lvextend / lvreduce |
+| 迁移 | pvmove | — | — |
+
+```bash
+# 创建
+sudo pvcreate /dev/sde
+sudo vgcreate datavg /dev/sde
+sudo lvcreate -n app -L 1G datavg      # -l 100%FREE 用完剩余
+sudo mkfs.xfs /dev/datavg/app
+
+# 扩容（-r 同时扩文件系统；+ 是增加，不带 + 是设定总量）
+sudo lvextend -r -L +500M /dev/datavg/app
+sudo lvextend -r -l +100%FREE /dev/datavg/app
+# 忘了 -r：xfs_growfs 挂载点 / resize2fs 设备
+
+# VG 满了：加盘
+sudo pvcreate /dev/sdx && sudo vgextend datavg /dev/sdx
+
+# ext4 缩小（XFS 不能缩）
+sudo umount /mnt/logs && sudo lvreduce -r -L 300M /dev/datavg/logs && sudo mount /dev/datavg/logs /mnt/logs
+
+# 在线换盘
+sudo vgextend datavg /dev/sdnew; sudo pvmove /dev/sdold; sudo vgreduce datavg /dev/sdold; sudo pvremove /dev/sdold
+
+# 删除（从上往下）
+sudo umount /mnt/app      # 并删掉 fstab 里那一行！
+sudo lvremove /dev/datavg/app; sudo vgremove datavg; sudo pvremove /dev/sde
+```
+
+fstab 写 `/dev/datavg/app`（不是 `/etc/...`）或 UUID 都可以；不要写 `/dev/dm-N`。
+⚠️ `lvreduce` 不加 `-r` 会丢数据；LVM 没有冗余，跨盘越多风险越大。
+数据完整性：`md5sum 文件 | sudo tee /root/x.md5`，之后 `md5sum -c /root/x.md5`。
