@@ -150,3 +150,47 @@ sudo lvremove /dev/datavg/app; sudo vgremove datavg; sudo pvremove /dev/sde
 fstab 写 `/dev/datavg/app`（不是 `/etc/...`）或 UUID 都可以；不要写 `/dev/dm-N`。
 ⚠️ `lvreduce` 不加 `-r` 会丢数据；LVM 没有冗余，跨盘越多风险越大。
 数据完整性：`md5sum 文件 | sudo tee /root/x.md5`，之后 `md5sum -c /root/x.md5`。
+
+## swap
+
+```bash
+swapon --show; free -h
+# 文件
+sudo dd if=/dev/zero of=/swapfile bs=1M count=512 && sudo chmod 600 /swapfile
+sudo mkswap /swapfile && sudo swapon /swapfile
+# LV / 分区
+sudo mkswap /dev/datavg/swap2 && sudo swapon /dev/datavg/swap2
+sudo swapon -a          # 启用 fstab 中所有 swap（验证写法）
+sudo swapoff /swapfile
+```
+
+```
+/swapfile          none  swap  defaults        0 0
+/dev/datavg/swap2  none  swap  defaults,pri=10 0 0
+UUID=xxxx          none  swap  defaults        0 0
+```
+
+## RAID（mdadm）
+
+| 级别 | 4 × 1T 可用 | 容错 |
+|---|---|---|
+| 0 | 4T | 0 |
+| 1 | 1T（2 块） | 剩一块即可 |
+| 5 | 3T | 1 |
+| 6 | 2T | 2 |
+| 10 | 2T | 每组镜像 1 |
+
+```bash
+sudo mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/sdg /dev/sdh   # 第一个参数是阵列名
+cat /proc/mdstat                       # [UU] 健康，[U_] 降级，(F) 故障
+sudo mdadm --detail /dev/md0
+sudo mdadm --detail --scan | sudo tee -a /etc/mdadm.conf    # 防止重启变 md127
+echo "UUID=$(sudo blkid -s UUID -o value /dev/md0) /mnt/raid xfs defaults 0 0" | sudo tee -a /etc/fstab
+
+# 换盘
+sudo mdadm /dev/md0 --fail /dev/sdh
+sudo mdadm /dev/md0 --remove /dev/sdh
+sudo mdadm /dev/md0 --add /dev/sdnew
+```
+
+⚠️ RAID 不是备份。`blkid` 取 UUID 一定带 `-s UUID`，否则会输出多行写坏 fstab；`$(...)` 拼进配置前先单独跑一遍。

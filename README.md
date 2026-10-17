@@ -37,6 +37,7 @@
 | W2 | 10-12 | 第 2 周周测 | [链接](labs/2026-10-12-week2-exam.md) |
 | W3 | 10-13 | 磁盘、分区、文件系统、挂载 | [链接](labs/2026-10-13-disk-partition-fs-mount.md) |
 | W3 | 10-16 | LVM | [链接](labs/2026-10-16-lvm.md) |
+| W3 | 10-17 | swap、RAID | [链接](labs/2026-10-17-swap-raid.md) |
 
 速查表：[W1 命令行与文本处理](cheatsheets/week1-cli-text.md) · [W2 系统管理](cheatsheets/week2-sysadmin.md) · [W3 存储](cheatsheets/week3-storage.md)
 
