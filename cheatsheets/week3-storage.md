@@ -194,3 +194,53 @@ sudo mdadm /dev/md0 --add /dev/sdnew
 ```
 
 ⚠️ RAID 不是备份。`blkid` 取 UUID 一定带 `-s UUID`，否则会输出多行写坏 fstab；`$(...)` 拼进配置前先单独跑一遍。
+
+## NFS
+
+```bash
+# 服务端
+sudo dnf install -y nfs-utils
+echo "/srv/nfs/share 192.168.56.0/24(rw,sync,root_squash)" | sudo tee /etc/exports.d/share.exports
+sudo systemctl enable --now nfs-server
+sudo exportfs -rav          # 重新导出
+sudo exportfs -v            # 实际生效的选项（检查空格陷阱）
+sudo firewall-cmd --permanent --add-service={nfs,mountd,rpc-bind} && sudo firewall-cmd --reload
+
+# 客户端
+sudo dnf install -y nfs-utils
+showmount -e node1
+sudo mount -t nfs node1:/srv/nfs/share /mnt/nfs
+mount | grep nfs            # vers=4.2、hard
+```
+
+```
+node1:/srv/nfs/share   /mnt/nfs   nfs   defaults,_netdev   0 0
+```
+
+| 选项 | 含义 |
+|---|---|
+| rw / ro | 读写 / 只读（默认 ro） |
+| sync / async | 写盘后回复（默认）/ 先回复 |
+| root_squash | 客户端 root → nobody（默认） |
+| no_root_squash / all_squash | root 保持 root（危险）/ 所有人 → nobody |
+
+⚠️ `网段(rw)` 中间**不能有空格**，否则网段只读、全世界可写。权限按数字 UID 判断。大量 D 状态进程先怀疑 NFS；服务端没了用 `umount -f` / `umount -l`。
+
+## autofs
+
+```bash
+sudo dnf install -y autofs
+echo "/mnt/auto /etc/auto.nfs --timeout=60" | sudo tee /etc/auto.master.d/nfs.autofs   # 后缀必须 .autofs
+echo "share -rw,sync node1:/srv/nfs/share" | sudo tee /etc/auto.nfs
+echo "* -rw,sync node1:/srv/nfs/home/&"    | sudo tee /etc/auto.home                   # 通配符
+sudo systemctl enable --now autofs     # 改配置后 restart
+```
+
+未访问的子目录 `ls` 看不到，`cd` 进去才挂载；`cd` 在里面不会超时卸载。
+
+## 配置目录命名规则（补充）
+
+| 目录 | 要求 |
+|---|---|
+| `/etc/exports.d/` | `*.exports` |
+| `/etc/auto.master.d/` | `*.autofs` |
