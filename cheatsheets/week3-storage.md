@@ -244,3 +244,32 @@ sudo systemctl enable --now autofs     # 改配置后 restart
 |---|---|
 | `/etc/exports.d/` | `*.exports` |
 | `/etc/auto.master.d/` | `*.autofs` |
+
+## tar 与压缩
+
+```bash
+tar czf x.tar.gz /etc        # c 创建  z gzip  f 文件名（f 放最后）
+tar cjf x.tar.bz2 /etc       # j bzip2
+tar cJf x.tar.xz /etc        # J xz
+tar tzf x.tar.gz             # 列出
+tar xzf x.tar.gz -C /tmp/r   # 解包到目录（目录先 mkdir -p）
+tar xzf x.tar.gz -C /tmp/r etc/hosts   # 只解一个文件（路径不带开头 /）
+gzip f / gzip -k f / gunzip f.gz       # 默认删除原文件，-k 保留
+zcat f.gz | less; zgrep 关键词 f.gz     # bzcat、xzcat 同理
+```
+
+压缩率 xz > bzip2 > gzip，速度相反。恢复备份先解到临时目录，不要直接在 `/` 下解。
+
+## fstab 写错 → 紧急模式
+
+```bash
+sudo passwd -S root          # 提前确认 root 有密码（P），锁定（L）则紧急模式进不去
+# 控制台（SSH 连不上），输入 root 密码后：
+mount -o remount,rw /        # 根是只读时
+vi /etc/fstab                # 删除/注释错误行，或加 nofail
+systemctl daemon-reload && mount -a
+systemctl default            # 或 reboot
+journalctl -xb               # 看是哪个 .mount 失败
+```
+
+非必需的数据盘、NFS 加 `nofail`；`/`、`/boot`、`/var` 不加。

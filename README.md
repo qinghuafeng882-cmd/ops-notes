@@ -39,6 +39,7 @@
 | W3 | 10-16 | LVM | [链接](labs/2026-10-16-lvm.md) |
 | W3 | 10-17 | swap、RAID | [链接](labs/2026-10-17-swap-raid.md) |
 | W3 | 10-18 | NFS、autofs | [链接](labs/2026-10-18-nfs-autofs.md) |
+| W3 | 10-19 | tar 压缩、fstab 紧急救援 | [链接](labs/2026-10-19-tar-and-fstab-rescue.md) |
 
 速查表：[W1 命令行与文本处理](cheatsheets/week1-cli-text.md) · [W2 系统管理](cheatsheets/week2-sysadmin.md) · [W3 存储](cheatsheets/week3-storage.md)
 
