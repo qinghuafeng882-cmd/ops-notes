@@ -44,7 +44,7 @@ sudo parted /dev/sdh print
 ```
 
 分区后看不到新设备：`sudo partprobe /dev/sdX`。
-擦除分区表和签名：`sudo wipefs -a /dev/sdX`（执行前再看一眼设备名）。
+擦除分区表和签名：`sudo wipefs -a /dev/sdX`（执行前再看一眼设备名；`-f` 是强制，不是擦除）。
 
 | | MBR | GPT |
 |---|---|---|
@@ -58,6 +58,9 @@ sudo parted /dev/sdh print
 sudo mkfs.xfs -L data1 /dev/sdg1       # 已有文件系统时拒绝，-f 强制
 sudo mkfs.ext4 -L data2 /dev/sdg2
 ```
+
+⚠️ 格式化对象是**分区**（sdg1），不是整盘；`appears to contain a partition table` → 写错对象了，别加 `-f`。
+df 比 LV 小一截：XFS 内部日志不计入 Size（300M 的 LV 日志 64M）。
 
 | | XFS | ext4 |
 |---|---|---|
@@ -160,7 +163,7 @@ sudo dd if=/dev/zero of=/swapfile bs=1M count=512 && sudo chmod 600 /swapfile
 sudo mkswap /swapfile && sudo swapon /swapfile
 # LV / 分区
 sudo mkswap /dev/datavg/swap2 && sudo swapon /dev/datavg/swap2
-sudo swapon -a          # 启用 fstab 中所有 swap（验证写法）
+sudo swapon -a          # 启用 fstab 中所有 swap（mount -a 不管 swap）
 sudo swapoff /swapfile
 ```
 
@@ -193,6 +196,8 @@ sudo mdadm /dev/md0 --remove /dev/sdh
 sudo mdadm /dev/md0 --add /dev/sdnew
 ```
 
+原盘加回显示 `re-added` 且立即 `[UU]` = bitmap 只同步改过的块；新盘显示 `added`，`/proc/mdstat` 有 `recovery = xx%`。
+
 ⚠️ RAID 不是备份。`blkid` 取 UUID 一定带 `-s UUID`，否则会输出多行写坏 fstab；`$(...)` 拼进配置前先单独跑一遍。
 
 ## NFS
@@ -224,6 +229,7 @@ node1:/srv/nfs/share   /mnt/nfs   nfs   defaults,_netdev   0 0
 | root_squash | 客户端 root → nobody（默认） |
 | no_root_squash / all_squash | root 保持 root（危险）/ 所有人 → nobody |
 
+测服务端 ro 时客户端要挂 rw，否则拦住写入的是客户端。
 ⚠️ `网段(rw)` 中间**不能有空格**，否则网段只读、全世界可写。权限按数字 UID 判断。大量 D 状态进程先怀疑 NFS；服务端没了用 `umount -f` / `umount -l`。
 
 ## autofs
@@ -236,7 +242,7 @@ echo "* -rw,sync node1:/srv/nfs/home/&"    | sudo tee /etc/auto.home            
 sudo systemctl enable --now autofs     # 改配置后 restart
 ```
 
-未访问的子目录 `ls` 看不到，`cd` 进去才挂载；`cd` 在里面不会超时卸载。
+未访问的子目录 `ls` 看不到，`cd` 进去才挂载；`cd` 在里面不会超时卸载。超时后 `mount | grep` 只剩 autofs 那一行。
 
 ## 配置目录命名规则（补充）
 
@@ -273,3 +279,11 @@ journalctl -xb               # 看是哪个 .mount 失败
 ```
 
 非必需的数据盘、NFS 加 `nofail`；`/`、`/boot`、`/var` 不加。
+
+## df 和 du 对不上
+
+| 现象 | 原因 | 验证 |
+|---|---|---|
+| df 满、du 小 | 已删除但仍被打开的文件 | `sudo lsof +L1`（加号）→ 重启进程 / `: > /proc/PID/fd/N` |
+| df 满、du 小 | 子挂载盖住了本文件系统的数据 | `findmnt -R /web`；`mount --bind /web /mnt/v; du -sh /mnt/v` |
+| 根分区满、找不到 | 盘没挂上时数据写进了挂载点目录 | `mount --bind / /mnt/rootview; du -sh /mnt/rootview/data` |
