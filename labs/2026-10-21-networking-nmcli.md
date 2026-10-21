@@ -71,6 +71,7 @@ sudo nmcli con up enp0s8
 
 ## 踩坑
 
+- 热身（W3 复习）3/3；第 1 题把 `UUID=$(blkid ...)` 直接当成 fstab 内容 → fstab 不是 shell，不会展开 `$(...)`；要么 `echo "..." | sudo tee -a /etc/fstab` 让 shell 先展开，要么写展开后的 UUID。
 - `cat .../enp0s8.connection` → No such file → 后缀是 `.nmconnection`。
 - node2：`nmcli con mod ipv6.method manual ...` → `unknown connection 'ipv6.method'` → 漏了连接名，nmcli 把第一个参数当成连接名。
 - `nmlic` 拼错。
