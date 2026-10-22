@@ -113,4 +113,18 @@ rsync -av src/ fqh@node2:/tmp/dst/      # -a 归档（含 -r），只传变化�
 | `rsync -av a  host:/tmp/d/` | `/tmp/d/a/...`（带目录本身） |
 | `rsync -av a/ host:/tmp/d/` | `/tmp/d/...`（只传目录里的内容） |
 
+| 参数 | 作用 |
+|---|---|
+| `-a` | = `-rlptgoD`：递归、链接、权限、mtime、属组、属主（接收端 root 才保留）、设备 |
+| `-v` / `--stats` | 列出文件 / 统计（Literal = 真传的，Matched = 用对方旧块拼的） |
+| `-z` | 压缩（慢网络用） |
+| `-P` | 进度 + 断点续传 |
+| `-n` | 预演 |
+| `--delete` | 删除目标多余文件（镜像）→ **必须先 `-n`** |
+| `--exclude='*.log'` | 排除 |
+| `-c` | 按校验和比较（默认只比大小 + mtime） |
+
+原理：quick check（大小 + mtime）决定传哪些文件 → delta 算法（切块、滚动校验）决定传文件的哪几块。本机复制不用 delta。两端都要装 rsync。
+
 ⚠️ 不要用 sudo 整个拷 `/etc/ssh`：会把主机私钥带走。
+⚠️ bash `for i in 1 2 3` 用空格；`1,2,3` 是一个词，逗号只在 `{1,2,3}` 里有效。
