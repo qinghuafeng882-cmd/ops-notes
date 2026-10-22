@@ -42,6 +42,7 @@
 | W3 | 10-19 | tar 压缩、fstab 紧急救援 | [链接](labs/2026-10-19-tar-and-fstab-rescue.md) |
 | W3 | 10-20 | 第 3 周周测（7.8/8） | [链接](labs/2026-10-20-week3-exam.md) |
 | W4 | 10-21 | 网络：nmcli、名字解析 | [链接](labs/2026-10-21-networking-nmcli.md) |
+| W4 | 10-22 | SSH：密钥登录、sshd 加固、scp/rsync | [链接](labs/2026-10-22-ssh.md) |
 
 速查表：[W1 命令行与文本处理](cheatsheets/week1-cli-text.md) · [W2 系统管理](cheatsheets/week2-sysadmin.md) · [W3 存储](cheatsheets/week3-storage.md) · [W4 网络与安全](cheatsheets/week4-network-security.md)
 

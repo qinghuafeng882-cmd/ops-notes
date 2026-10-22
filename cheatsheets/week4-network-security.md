@@ -54,3 +54,63 @@ grep ^hosts /etc/nsswitch.conf          # files dns myhostname
 getent hosts web1                       # 和程序走同一路径
 dig web1 / nslookup web1                # 只查 DNS，不看 /etc/hosts（bind-utils）
 ```
+
+## SSH
+
+```bash
+ssh-keygen                              # 默认 ed25519，私钥 600
+ssh-copy-id fqh@node2                   # 公钥追加到对方 ~/.ssh/authorized_keys
+ssh fqh@node2 'hostname; id'            # 远程执行
+ssh -v fqh@node2                        # 看认证过程（Offering public key）
+ssh -o PubkeyAuthentication=no fqh@node2   # 只用密码，测密码登录是否被禁
+ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub   # 服务端主机指纹
+ssh-keygen -R node2                     # 删除 known_hosts 旧记录（IP 也有记录要一起删）
+```
+
+| | 主机密钥 | 用户密钥 |
+|---|---|---|
+| 证明 | 服务器是真的 | 用户是本人 |
+| 私钥 | 服务端 `/etc/ssh/ssh_host_*_key` | 客户端 `~/.ssh/id_ed25519` |
+| 公钥 | 客户端 `~/.ssh/known_hosts` | 服务端 `~/.ssh/authorized_keys` |
+| 出错 | `REMOTE HOST IDENTIFICATION HAS CHANGED`（直接拒绝，不给 yes） | 一直要密码 / `Permission denied (publickey)` |
+
+权限：`~` 别人不可写、`~/.ssh` 700、`authorized_keys` 600、私钥 600。错了 → 服务端日志 `bad ownership or modes`，客户端只是回退到要密码。
+
+### sshd 配置
+
+```bash
+sudo tee /etc/ssh/sshd_config.d/10-lab.conf << 'EOF'
+PermitRootLogin no
+PasswordAuthentication no
+EOF
+sudo sshd -t && sudo systemctl reload sshd     # reload 不断开已有会话
+sudo sshd -T | grep -Ei 'permitrootlogin|passwordauth'
+sudo journalctl -u sshd -n 30 --no-pager
+```
+
+⚠️ **第一个值生效**（与 systemd 相反）：`Include sshd_config.d/*.conf` 在主配置开头，drop-in 按文件名顺序 → `05-` 胜过 `10-` 胜过主配置。
+⚠️ `sshd -T` 读的是磁盘文件，不是运行中的 sshd → 改/删配置后一定 reload。
+⚠️ 改 sshd 前留一个会话或控制台；不要改你登录入口那台机器。
+
+RHEL 10 默认 `PermitRootLogin prohibit-password`（`sshd -T` 显示 `without-password`）。
+
+| 现象 | 原因 |
+|---|---|
+| 确认指纹后 `Connection closed`，再连 `Connection reset by peer` | LoginGraceTime 120 秒超时 → PerSourcePenalties 暂时封这个 IP（日志 `penalty:`），等一会儿自动恢复 |
+| `sudo ssh/rsync` 又问指纹、要密码 | 以 root 身份连接，用 `/root/.ssh` |
+
+## 传文件
+
+```bash
+scp file fqh@node2:/tmp/                # 上传
+scp fqh@node2:/etc/os-release /tmp/     # 下载
+scp -r dir fqh@node2:/tmp/
+rsync -av src/ fqh@node2:/tmp/dst/      # -a 归档（含 -r），只传变化的部分
+```
+
+| 写法 | 结果 |
+|---|---|
+| `rsync -av a  host:/tmp/d/` | `/tmp/d/a/...`（带目录本身） |
+| `rsync -av a/ host:/tmp/d/` | `/tmp/d/...`（只传目录里的内容） |
+
+⚠️ 不要用 sudo 整个拷 `/etc/ssh`：会把主机私钥带走。
