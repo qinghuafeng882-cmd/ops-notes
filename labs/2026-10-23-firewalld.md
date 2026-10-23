@@ -70,6 +70,7 @@ timeout 3 bash -c '</dev/tcp/node1/8080' && echo OK
 | rich rule 放行 node2 | node2 `curl node1:8080` | 成功 | ✅ |
 | rich rule 不放行宿主机 | Windows 浏览器 :8080 | 失败 | ✅ `ERR_CONNECTION_TIMED_OUT` |
 | rich rule 只限 IPv4 | node2 `curl -g http://[fd00:56::11]:8080/` | 失败 | ✅ |
+| `--runtime-to-permanent` | 运行时加 9090 → 转存 → `--permanent --list-ports`、`grep 9090 public.xml` | 磁盘上出现 9090 | ✅ `<port port="9090" protocol="tcp"/>`，之后已删除 |
 | 收尾 | `--list-all` | ports、rich rules 为空，http 保留 | ✅ |
 
 ## 踩坑
@@ -84,6 +85,7 @@ timeout 3 bash -c '</dev/tcp/node1/8080' && echo OK
 ## 卡点 / 没想明白的
 
 - D-Bus 是什么（已补讲，见关键概念）。
+- `--runtime-to-permanent` 没懂 → 两份规则两个方向：`--reload` 是磁盘 → 内存（覆盖运行时，相当于撤销），`--runtime-to-permanent` 是内存 → 磁盘（把**整份**运行时规则存下来，相当于保存，先 `--list-all` 确认没有多余的临时规则）。已用 9090 验证。
 - 热身 1：sshd 拒绝公钥的日志原文记不住 → 关键词 `bad ownership or modes`。
 
 ## 回忆题
