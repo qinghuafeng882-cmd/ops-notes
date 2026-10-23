@@ -128,3 +128,51 @@ rsync -av src/ fqh@node2:/tmp/dst/      # -a 归档（含 -r），只传变化�
 
 ⚠️ 不要用 sudo 整个拷 `/etc/ssh`：会把主机私钥带走。
 ⚠️ bash `for i in 1 2 3` 用空格；`1,2,3` 是一个词，逗号只在 `{1,2,3}` 里有效。
+
+## firewalld
+
+```bash
+sudo firewall-cmd --state
+sudo firewall-cmd --get-default-zone / --get-active-zones
+sudo firewall-cmd --list-all                    # 运行时；加 --permanent 看永久
+sudo firewall-cmd --permanent --add-service=http
+sudo firewall-cmd --permanent --add-port=8080/tcp
+sudo firewall-cmd --permanent --remove-port=8080/tcp
+sudo firewall-cmd --reload                      # 永久规则生效；丢掉只在运行时的规则
+sudo firewall-cmd --add-port=8080/tcp && sudo firewall-cmd --runtime-to-permanent   # 先试再存
+sudo firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.56.12/32" port port="8080" protocol="tcp" accept'
+sudo firewall-cmd --permanent --remove-rich-rule='...（原样照抄）'
+sudo firewall-cmd --permanent --zone=trusted --add-source=192.168.56.12
+sudo firewall-cmd --get-services                # 可用 service 名
+sudo nft list ruleset                           # 只看不改
+```
+
+| 写法 | 现在 | reload / 重启后 |
+|---|---|---|
+| `--add-...` | ✅ | ❌ |
+| `--permanent --add-...` | ❌（要 `--reload`） | ✅ |
+| `--runtime-to-permanent` | ✅ | ✅ |
+
+zone 匹配：**来源地址 > 网卡 > 默认 zone（public）**。
+
+| zone | 行为 |
+|---|---|
+| public | 默认；只放行列出的服务，其余拒绝 |
+| trusted | 全放行 |
+| drop | 全丢弃（客户端超时） |
+| block | 全拒绝 |
+
+- 永久配置：`/etc/firewalld/zones/public.xml`（上一版 `.old`）；service 定义 `/usr/lib/firewalld/services/`，自定义放 `/etc/firewalld/services/`。
+- service 优先于 port：可读、可含多个端口。
+- rich rule 写 `family="ipv4"` 就只管 IPv4。
+- ⚠️ 不要删 `ssh` 服务；不要绕过 firewalld 直接改 nft/iptables。
+
+### 客户端报错 → 哪一层
+
+| Linux 客户端看到 | 原因 |
+|---|---|
+| `No route to host` | 防火墙拒绝 |
+| `Connection refused` | 放行了，但没程序监听 |
+| 超时 | 被丢弃 / 网络不通 |
+
+新版 curl 都显示 `Could not connect to server` → 用 `timeout 3 bash -c '</dev/tcp/node1/8080' && echo OK`。Windows 浏览器被拒也显示超时。最终在服务端查：`ss -tlnp` → `firewall-cmd --list-all` → SELinux。
