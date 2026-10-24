@@ -176,3 +176,45 @@ zone 匹配：**来源地址 > 网卡 > 默认 zone（public）**。
 | 超时 | 被丢弃 / 网络不通 |
 
 新版 curl 都显示 `Could not connect to server` → 用 `timeout 3 bash -c '</dev/tcp/node1/8080' && echo OK`。Windows 浏览器被拒也显示超时。最终在服务端查：`ss -tlnp` → `firewall-cmd --list-all` → SELinux。
+
+## SELinux（上）
+
+```bash
+getenforce; sestatus
+sudo setenforce 0 / 1                  # Permissive / Enforcing，只改运行时
+grep ^SELINUX= /etc/selinux/config     # 永久，重启生效
+id -Z; ps -eZ | grep httpd; ls -Z / ls -Zd 目录
+sudo semanage fcontext -l -C           # 本机自定义的规则（policycoreutils-python-utils）
+sudo semanage fcontext -l | grep '/var/www'
+sudo semanage fcontext -a -t httpd_sys_content_t "/srv/web(/.*)?"   # 加规则（带 / 和引号）
+sudo semanage fcontext -d "/srv/web(/.*)?"                          # 删规则
+sudo restorecon -Rv /srv/web           # 按规则库重打；无输出 = 已一致
+sudo chcon -t httpd_sys_content_t 文件  # 临时，restorecon 会改回
+sudo ausearch -m AVC -ts recent        # 拒绝记录
+sudo sealert -a /var/log/audit/audit.log   # 需要 setroubleshoot-server
+```
+
+| 模式 | 拦截 | 记录 |
+|---|---|---|
+| Enforcing | ✅ | ✅ |
+| Permissive | ❌ | ✅（`permissive=1`，每一步都记） |
+| Disabled | ❌ | ❌ |
+
+| 动作 | 标签 |
+|---|---|
+| 新建 / cp | 继承目标目录 |
+| **mv** | **保留原标签**（inode 不变） |
+| restorecon | 按规则库 |
+| chcon | 直接改，不改规则库 → 不持久 |
+
+AVC = Access Vector Cache。读法：`denied { read }` 动作、`scontext` 谁、`tcontext` 访问什么、`tclass` 对象类别。
+
+| 常见类型 | 用于 |
+|---|---|
+| httpd_t | httpd 进程 |
+| httpd_sys_content_t | 网页内容 |
+| user_home_t | 家目录文件 |
+| var_t | /srv 等的默认 |
+
+⚠️ 排障可以临时 `setenforce 0` 确认原因，确认后**马上 `setenforce 1`**，修标签而不是关 SELinux。
+⚠️ 改 httpd 配置先 `httpd -t`。
