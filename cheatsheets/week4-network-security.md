@@ -218,3 +218,53 @@ AVC = Access Vector Cache。读法：`denied { read }` 动作、`scontext` 谁�
 
 ⚠️ 排障可以临时 `setenforce 0` 确认原因，确认后**马上 `setenforce 1`**，修标签而不是关 SELinux。
 ⚠️ 改 httpd 配置先 `httpd -t`。
+
+## SELinux（下）：端口、boolean
+
+```bash
+sudo ausearch -m AVC -ts recent | audit2why     # 翻译原因（建议不一定最好）
+sudo semanage port -l | grep -w http_port_t
+sudo semanage port -a -t http_port_t -p tcp 8888   # 已登记的端口用 -m
+sudo semanage port -d -t http_port_t -p tcp 8888
+getsebool -a | grep httpd
+sudo semanage boolean -l | grep httpd_enable_homedirs   # (当前值, 持久值) + 说明
+sudo setsebool -P httpd_enable_homedirs on      # 不加 -P 重启后恢复
+```
+
+| 拒绝类型 | AVC 特征 | 修法 |
+|---|---|---|
+| 文件标签 | tclass=file/dir | `restorecon` / `semanage fcontext -a` + `restorecon` |
+| 端口标签 | tcp_socket `{ name_bind }` | `semanage port -a` |
+| boolean | 标签都对仍被拒 | `setsebool -P` |
+
+⚠️ audit2why 可能建议 `nis_enabled`、`httpd_unified` 这种大范围开关 → 选范围最小的修法。
+⚠️ 换端口顺序：`semanage port` → `firewall-cmd` → `Listen` → `httpd -t` → restart。失败重试太多次 → `systemctl reset-failed httpd`。
+
+个人主页三道关：`chmod 711 ~` + `public_html` 755 → `userdir.conf` 里 `UserDir public_html` → `httpd_enable_homedirs`。
+
+## 启动流程
+
+| 阶段 | 配置 | 坏了 |
+|---|---|---|
+| BIOS / UEFI | 固件 | 找不到引导设备 |
+| GRUB2 | `/etc/default/grub`、`/boot/loader/entries/` | `grub>` |
+| 内核 + initramfs（dracut） | `rd.*` 参数 | dracut 紧急 shell |
+| systemd | fstab、单元文件 | 紧急模式 |
+| 默认 target | `systemctl get-default` | — |
+
+```bash
+systemd-analyze; systemd-analyze blame | head
+cat /proc/cmdline                               # 本次开机的参数
+sudo grubby --info=DEFAULT / --default-kernel
+sudo grubby --update-kernel=ALL --args="x=1"    # 改 BLS 条目，重启生效；DEFAULT 只改默认内核
+sudo grubby --update-kernel=ALL --remove-args="quiet"
+sudo vi /etc/default/grub && sudo grub2-mkconfig -o /boot/grub2/grub.cfg   # 等待时间等
+sudo grub2-editenv - list
+sudo grub2-editenv - unset menu_auto_hide       # 菜单被自动隐藏时（应急：按住 Shift / 按 Esc）
+sudo lsinitrd | grep -i lvm                     # initramfs 内容（要 sudo）
+sudo dracut -f                                  # 重新生成当前内核的 initramfs
+```
+
+- `rd.lvm.lv=rlm/root`：给 initramfs 的参数，先激活根 LV。`root=... ro` 先只读挂根。
+- 内核不认识的参数不报错，转交给 init → 拼错只是不起作用。
+- 条目：正常内核 + `0-rescue`（通用救援内核）。
