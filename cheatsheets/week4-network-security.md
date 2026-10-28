@@ -268,3 +268,45 @@ sudo dracut -f                                  # 重新生成当前内核的 in
 - `rd.lvm.lv=rlm/root`：给 initramfs 的参数，先激活根 LV。`root=... ro` 先只读挂根。
 - 内核不认识的参数不报错，转交给 init → 拼错只是不起作用。
 - 条目：正常内核 + `0-rescue`（通用救援内核）。
+
+## 救援与重置 root 密码
+
+GRUB：选条目 → `e` → linux 行末尾加参数 → `Ctrl+X`（只影响这一次开机）。
+
+| 停在哪 | 参数 | 根分区 | 要 root 密码（RHEL 10） | 用途 |
+|---|---|---|---|---|
+| rescue.target | `systemd.unit=rescue.target` | 读写，fstab 都挂 | ✅ | 不启动普通服务做维护 |
+| emergency.target | `systemd.unit=emergency.target` | 只读，只挂根 | ✅ | fstab 写坏 |
+| dracut shell | `rd.break` | 只读挂在 `/sysroot` | ✅ | 根挂载问题 |
+| init=/bin/bash | `init=/bin/bash` | `/` 只读 | ❌ | **忘记 root 密码** |
+| rescue 内核 | 菜单选 `0-rescue` | 正常 | 正常登录 | initramfs 坏 / 缺驱动 |
+| 临时 permissive | `enforcing=0` | 正常 | 正常登录 | 确认是否 SELinux 导致 |
+
+```bash
+# 忘记 root 密码（RHEL 10）
+init=/bin/bash                    # GRUB e 加在 linux 行末尾
+mount -o remount,rw /
+passwd
+touch /.autorelabel               # 先斜杠后点！不是 ./autorelabel
+exec /sbin/init                   # 不能 exit（bash 是 PID 1）
+
+# rd.break 版本（要 root 密码）
+mount -o remount,rw /sysroot; chroot /sysroot; passwd; touch /.autorelabel; exit; exit
+
+# dracut shell 里手动激活根 LV
+lvm lvs; lvm lvchange -ay rlm/root; exit
+
+# 开机后确认
+sudo journalctl --list-boots | tail -4          # relabel 会多一次短开机
+sudo journalctl -b -1 | grep -i autorelabel
+ls -Z /etc/shadow                               # shadow_t
+```
+
+⚠️ 漏了 relabel → shadow 是 `unlabeled_t` → 所有用户"密码错误"（`unix_chkpwd` 被拦）→ `enforcing=0` 登录 → `restorecon -v /etc/shadow`。
+⚠️ `journalctl -b 0` 是当前开机，重启后编号整体前移；稳定引用用 boot ID。
+⚠️ 排障用证据：`--list-boots`、journal、`/root/.bash_history`，不靠盯屏幕和记忆。
+
+| 动作 | SELinux 标签 |
+|---|---|
+| 新建 / cp | 继承目标目录 |
+| mv / **cp -a** | 保留原标签 |
