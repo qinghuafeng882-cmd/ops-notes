@@ -92,8 +92,30 @@ sudo grubby --update-kernel=DEFAULT --remove-args="w4lab=1"
 - 重启时看不到 GRUB 菜单 → `menu_auto_hide=1` → `grub2-editenv - unset menu_auto_hide`（应急：开机按住 Shift 或按 Esc）。
 - `systemd-analyze`：用户空间 57 秒，`sdg.device` 等了 44.8 秒（md0 成员盘，推测是虚拟盘识别慢），未处理。
 
+## 补课（10-26 ～ 10-28）：BIOS / UEFI、GRUB2、initramfs、BLS
+
+开机是一条接力：固件（只会加载引导程序）→ GRUB2（懂文件系统和 LVM，读出内核、传参数）→ initramfs（内存里的迷你系统，挂真正的根）→ systemd。
+
+| | BIOS（Basic Input/Output System） | UEFI（Unified Extensible Firmware Interface） |
+|---|---|---|
+| 找引导程序 | 执行第 0 扇区的 446 字节代码 | 从 FAT32 的 ESP（EFI System Partition）按文件名打开 `.efi` |
+| 引导项 | 无，按磁盘顺序 | 存在主板 NVRAM（`efibootmgr`） |
+| Secure Boot | 无 | 有（签名链：固件 → shim → grub → 内核） |
+| 判断 | `/sys/firmware/efi` 不存在 | 存在 |
+
+- MBR（Master Boot Record）= 第 0 扇区 512 字节：引导代码 446 + 分区表 64 + 签名 2。"MBR"既指这个扇区，也指 MBR（DOS）分区方案。GPT 盘第 0 扇区是"保护性 MBR"，446 字节代码区照样能用。
+- node1（GPT + BIOS）实测：保护性 MBR 放 GRUB `boot.img` → sda1（1M `BIOS boot`）放 `core.img` → sda2（2G `Linux extended boot`，即 /boot）放 grub.cfg、内核、initramfs、BLS 条目 → sda3 LVM。
+- "内核读不了磁盘"说法不准确：① 内核是磁盘上的文件，没进内存前无法执行 → GRUB 负责加载；② 运行后很多驱动是模块（在根分区上），LVM 激活要用户空间的 `lvm` 程序 → initramfs 提前打包。
+- initramfs：gzip 压缩的 cpio 归档（node1 39M，解开约 87M），激活 `rd.lvm.lv` → 只读挂到 `/sysroot` → `switch_root` 交给真正的 systemd。坏在这里 → dracut 紧急 shell（根还没挂上）；fstab 错 → systemd 紧急模式（根已挂上）。
+- dracut 不是缩写：是马萨诸塞州的一个镇名（红帽用附近地名命名项目），生成 initramfs 的工具。
+- BLS 条目字段：`title` 菜单标题、`version`、`linux` 内核、`initrd`、`options` 内核参数（grubby 改的就是这行）、`grub_users`/`grub_arg --unrestricted`（RHEL 的 GRUB 扩展：设了 GRUB 密码时，不用密码也能启动这一项）、`grub_class` 菜单图标分类。`linux /vmlinuz-...` 没有 `/boot` 前缀：/boot 是独立分区，GRUB 从这个分区的根开始找。
+- grub.cfg 第 138–139 行 `insmod blscfg` + `blscfg`：开机时现场读 entries 目录。
+- shim：Secure Boot 下由微软签名的小引导程序，内含发行版证书，用来验证发行版签名的 grub；node1 是 BIOS，`/boot/efi/EFI/rocky` 是空目录，没装 shim（之前猜"装了 shim"是错的）。
+- `sudo cat /boot/loader/entries/*.conf` 报不存在 → `*` 由 fqh 的 shell 在 sudo 之前展开，fqh 读不了目录，展开失败 → `sudo sh -c 'cat /boot/loader/entries/*.conf'`。
+
 ## 卡点 / 没想明白的
 
+- BIOS 和 UEFI 的区别、GRUB2 / initramfs / BLS 的作用（已补课，见上节）。
 - dmesg 日志看不懂（已逐行讲解，见关键概念最后两条）。
 - 达标题 2 用了 `semanage port -l` 查 boolean → 应为 `semanage boolean -l`，看括号里第二个值。
 - 达标题 3 只说了"打标签"，没写出命令。
@@ -117,6 +139,18 @@ sudo grubby --update-kernel=DEFAULT --remove-args="w4lab=1"
 <details><summary>答案</summary>
 
 grubby 改的是 BLS 条目，`/proc/cmdline` 是本次开机的参数，要重启。菜单：`grub2-editenv - list` 有 `menu_auto_hide=1` 且上次开机成功 → 菜单被隐藏；`grub2-editenv - unset menu_auto_hide`，或开机按 Shift/Esc；另外确认 VirtualBox 窗口是打开的。
+</details>
+
+4. （概念）GPT + BIOS 的机器，GRUB 的代码分别放在哪几个地方？为什么 UEFI 机器不需要 BIOS boot 分区？
+<details><summary>答案</summary>
+
+保护性 MBR 的 446 字节（boot.img）→ BIOS boot 分区（core.img，带文件系统驱动）→ /boot/grub2（模块和 grub.cfg）。UEFI 固件自己能读 FAT32，直接从 ESP 打开完整的 grubx64.efi（前面有 shim），不用拆段。
+</details>
+
+5. （排障）开机停在 dracut 紧急 shell 和停在 systemd 紧急模式，分别说明坏在哪一步？各举一个常见原因。
+<details><summary>答案</summary>
+
+dracut：initramfs 阶段，真正的根还没挂上 → 如根 LV 改名但 `rd.lvm.lv=`/`root=` 还是旧名、缺驱动。systemd 紧急模式：根已挂上，挂 fstab 里其他文件系统失败 → 如 fstab 写错 UUID。
 </details>
 
 ## 复习记录
