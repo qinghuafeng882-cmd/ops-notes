@@ -310,3 +310,31 @@ ls -Z /etc/shadow                               # shadow_t
 |---|---|
 | 新建 / cp | 继承目标目录 |
 | mv / **cp -a** | 保留原标签 |
+
+## 周测补充（W4 模拟测试 ①）
+
+```bash
+man -k 关键词                     # 搜不到先 sudo mandb
+nmcli connection --help           # 子命令：add 新建 / modify 修改 / edit 交互
+sudo nmcli con modify enp0s8 ipv4.addresses "192.168.56.12/24,192.168.56.22/24"   # 第一个是主地址
+ip route get 192.168.56.11        # 看源地址 src
+sudo hostnamectl hostname node2.lab.example
+ssh -o BatchMode=yes ops@node2 hostname   # 需要密码就直接失败 → 证明是密钥登录
+curl -m5 --interface 192.168.56.22 http://node1:9000/   # 指定源地址测防火墙
+ls -Zd /var/www/html              # 拿正确的目录当参照抄类型名
+```
+
+| 坑 | 处理 |
+|---|---|
+| `useradd: group ops exists` | 默认建同名私有组；组已有人用 → `-g ops`，不要删 |
+| `useradd -r` | 系统账户，不建家目录，人用的账户不要加 |
+| ssh-copy-id 在对方禁止密码时 | 用不了 → 借已有通道传公钥，sudo 安装：chown + 700/600 + restorecon |
+| `sudo cmd \| ssh ...` | sudo 只作用于前面的 cmd，ssh 仍是当前用户 |
+| `PermitRootLogin no` 后日志写 Failed password | 本机 `su - root` 同密码做对照 |
+| `"/srv/exam(/.*)?"` 不加引号 | bash 先解析括号报语法错 |
+| `sudo cat 文件 << EOF` | 不会写入，用 tee |
+| 两台 VM 同时重启卡住 | 一台起来再起另一台 |
+
+httpd 新路径：`/etc/httpd/conf.d/x.conf` 写 `Alias /exam /srv/exam` + `<Directory /srv/exam> Require all granted </Directory>` → `httpd -t` → reload → semanage fcontext + restorecon。
+
+验证设计三问：最终结果是什么？什么命令能直接看到？有没有看起来对其实不对？证据：效果 > 运行状态 > 配置；"只允许"正反都测。
