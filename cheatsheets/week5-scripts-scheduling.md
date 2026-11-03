@@ -70,3 +70,73 @@ fi
 | 文件 | `-e` 存在 `-f` 文件 `-d` 目录 `-r -w -x` 权限 `-s` 非空 |
 
 ⚠️ `[` 是命令：`[`、`]` 两边要空格；变量不加引号时，空值会报 `unary operator expected`，或者更糟：`[ -n $a ]` 不报错但结果错。写 bash 脚本用 `[[ ]]`。
+
+## 循环
+
+```bash
+for f in /var/log/*.log; do echo "$f"; done      # 遍历文件用通配符，不用 $(ls)
+for s in "$@"; do ...; done                      # 遍历参数
+for i in {1..5}; do ...; done
+for ((i=1; i<=5; i++)); do ...; done
+while IFS=: read -r user _ uid _; do ...; done < /etc/passwd
+while read -r pcent target; do ...; done < <(df --output=pcent,target | tail -n +2)
+```
+
+⚠️ `cmd | while read` 在子进程，变量带不回 → 用 `< 文件` 或 `< <(命令)`。
+
+## 算术
+
+```bash
+total=$(( a + b ))           # 取值
+(( use > 80 )) && echo big   # 退出码：真 → 0
+(( n += 1 ))                 # 比 n++ 安全（n=0 时 n++ 退出码为 1）
+```
+
+`(( ))` 里 `>` 是大于、变量不写 `$`、只有整数。
+
+## case / 函数
+
+```bash
+case "$1" in
+    start)     ... ;;
+    stop|halt) ... ;;
+    *)         echo "usage: $0 start|stop" >&2; exit 2 ;;
+esac
+
+check() {
+    local svc="$1"                     # local！
+    systemctl is-active --quiet "$svc" # 最后一条的退出码就是函数的退出码
+}
+check sshd && echo ok                  # 退出码：$? / if
+out=$(myfunc arg)                      # 输出：$(...)
+```
+
+`shift` 参数左移；`set -- a b c` 重设参数；脚本不写 exit 时退出码 = 最后一条命令的。
+
+## 参数展开
+
+| 写法 | `f=report.tar.gz` |
+|---|---|
+| `${f#*.}` / `${f##*.}` | `tar.gz` / `gz`（从开头删） |
+| `${f%.gz}` / `${f%%.*}` | `report.tar` / `report`（从末尾删） |
+| `${p%\%}` | 去掉末尾的 `%` |
+| `${1:-80}` | 为空时用 80 |
+
+## 常用取数
+
+```bash
+read -r load1 _ < /proc/loadavg              # 1 分钟负载
+free -m | awk '/^Mem:/{print $7}'            # available（MiB）
+df --output=pcent,target -x tmpfs -x devtmpfs | tail -n +2
+systemctl --failed --no-legend | wc -l       # --no-legend：不要表头和说明
+```
+
+## 排错
+
+| 报错 | 原因 |
+|---|---|
+| `unexpected end of file` | 成对结构没结尾（fi / done / esac / } / 引号） |
+| `unexpected token 'do'` | if 后面写成了 do（应为 then） |
+| 输出里出现 `$svc` 字样 | 单引号里的变量不展开 |
+
+`shellcheck x.sh` → `bash -n x.sh` → 运行。`vim +18 x.sh` 跳到第 18 行。
