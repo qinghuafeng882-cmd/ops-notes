@@ -52,6 +52,7 @@
 | W4 | 10-30 | 第 4 周周测 / RHCSA 模拟 ①（闭卷 77%，最终 93%） | [链接](labs/2026-10-30-week4-exam-rhcsa-mock1.md) |
 | W5 | 11-02 | shell 脚本（上）：执行方式、引号、参数、退出码、if/test | [链接](labs/2026-11-02-shell-script-basics.md) |
 | W5 | 11-03 | shell 脚本（下）：循环、while read、case、函数、巡检脚本 | [链接](labs/2026-11-03-shell-loops-inspect.md) |
+| W5 | 11-04 | 计划任务：cron 与 systemd timer | [链接](labs/2026-11-04-cron-systemd-timer.md) |
 
 速查表：[W1 命令行与文本处理](cheatsheets/week1-cli-text.md) · [W2 系统管理](cheatsheets/week2-sysadmin.md) · [W3 存储](cheatsheets/week3-storage.md) · [W4 网络与安全](cheatsheets/week4-network-security.md) · [W5 脚本与计划任务](cheatsheets/week5-scripts-scheduling.md)
 
