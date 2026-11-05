@@ -205,3 +205,36 @@ sudo install -m 755 ~/x.sh /usr/local/bin/x.sh    # 脚本放系统目录（SELi
 | 关机错过 | 丢（cron.daily 由 anacron 补） | Persistent=true 补跑 |
 
 anacron = anachronistic cron，补跑 /etc/cron.daily 等。
+
+## 排障：CPU、内存、负载
+
+```bash
+uptime; nproc                  # 负载 ÷ 核数，三个数看趋势
+top                            # P 按 CPU，M 按内存，1 每个核，c 完整命令
+vmstat 1 5                     # 第一行是开机以来平均，看第二行起
+ps -eo pid,ppid,stat,%cpu,%mem,rss,cmd --sort=-%cpu | head -6
+ps -eo pid,stat,cmd | awk '$2 ~ /D/'      # D 状态进程
+free -h                        # 看 available
+journalctl -k | grep -i -E 'oom|killed'   # OOM（正则里不要加空格）
+cat /proc/PID/oom_score
+```
+
+| top CPU | 高了说明 |
+|---|---|
+| us | 应用计算多 |
+| sy | 内核忙：I/O、网络、进程切换 |
+| wa | CPU 空闲且有进程等 I/O（**CPU 忙时显示不出来**） |
+| st | 虚拟机的 CPU 被宿主机拿走 |
+
+| vmstat | 看什么 |
+|---|---|
+| r | 持续 > 核数：CPU 饱和 |
+| b | 持续 > 0：I/O 饱和 |
+| si / so | 持续非 0：内存真不够 |
+| bi / bo | 磁盘读 / 写量 |
+
+负载 = R + D 进程。负载高 + us 高 → CPU；负载高 + wa/b 高 → 磁盘；负载高 + CPU 空闲 + 磁盘不忙 → D 卡在无响应存储（NFS）。
+
+内存：free 小正常；available 才是可用；swap 用了但 si/so ≈ 0 没关系。OOM 痕迹只在内核日志；`CONSTRAINT_MEMCG` = cgroup 上限（`MemoryMax=`），`CONSTRAINT_NONE` = 整机。
+
+压测：`stress-ng --cpu 2 -t 60s`、`--hdd 2 --hdd-opts dsync`、`--vm 1 --vm-bytes 400M`；隔离：`sudo systemd-run --scope -p MemoryMax=200M -p MemorySwapMax=0 命令`。
