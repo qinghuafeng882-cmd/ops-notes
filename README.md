@@ -54,6 +54,7 @@
 | W5 | 11-03 | shell 脚本（下）：循环、while read、case、函数、巡检脚本 | [链接](labs/2026-11-03-shell-loops-inspect.md) |
 | W5 | 11-04 | 计划任务：cron 与 systemd timer | [链接](labs/2026-11-04-cron-systemd-timer.md) |
 | W5 | 11-05 | 排障（一）：CPU、内存、负载 | [链接](labs/2026-11-05-troubleshoot-cpu-mem-load.md) |
+| W5 | 11-06 | 排障（二）：磁盘满、inode、删了不释放、iostat | [链接](labs/2026-11-06-troubleshoot-disk.md) |
 
 ## 补缺口小课：RAID 与虚拟化
 

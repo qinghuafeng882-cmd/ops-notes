@@ -238,3 +238,45 @@ cat /proc/PID/oom_score
 内存：free 小正常；available 才是可用；swap 用了但 si/so ≈ 0 没关系。OOM 痕迹只在内核日志；`CONSTRAINT_MEMCG` = cgroup 上限（`MemoryMax=`），`CONSTRAINT_NONE` = 整机。
 
 压测：`stress-ng --cpu 2 -t 60s`、`--hdd 2 --hdd-opts dsync`、`--vm 1 --vm-bytes 400M`；隔离：`sudo systemd-run --scope -p MemoryMax=200M -p MemorySwapMax=0 命令`。
+
+## 排障：磁盘
+
+```bash
+df -hT; df -i                                   # 哪个文件系统满了；块满还是 inode 满
+sudo du -xh --max-depth=1 / 2>/dev/null | sort -h | tail     # 一层层往下钻
+sudo find / -xdev -type f -size +100M -exec ls -lh {} + 2>/dev/null
+du --inodes -x --max-depth=1 /var | sort -n     # 哪里文件最多
+sudo lsof +L1                                   # 已删除但仍被打开（NLINK 0）
+ls -l /proc/PID/fd                              # 看 (deleted) 的 fd 号
+: > /proc/PID/fd/N                              # 不重启进程释放空间
+: > app.log   或   truncate -s 0 app.log        # 清空正在写的日志，不要 rm
+find /dir -type f -mmin +60 -delete             # 海量小文件，不用 rm *
+journalctl --disk-usage; sudo journalctl --vacuum-size=200M
+ls -li f1 f2                                    # inode 号相同 = 硬链接
+```
+
+| 现象 | 原因 | 查 |
+|---|---|---|
+| ENOSPC，df 100% | 块满 | du -x 逐层 |
+| ENOSPC，df -h 有空间 | inode 满 | df -i、du --inodes |
+| df 满、du 小 | 删了但进程开着 | lsof +L1 |
+| 普通用户写满、root 还能写 | ext4 保留 5% | tune2fs -l |
+
+处理顺序：df -h + df -i → 还在涨吗 → 找大头 → **止血**（截断、清缓存 / 旧日志） → 根因（logrotate、调试日志、备份） → 80% 告警。
+
+```bash
+iostat -dxsy 1 3            # -d 只看磁盘 -x 扩展 -s 短格式 -y 跳过开机平均
+iostat -xzN 1 5             # -z 跳过空闲设备 -N 显示 LVM 名
+pidstat -d 1 5              # 哪个进程在读写
+```
+
+| iostat | 看什么 |
+|---|---|
+| r_await / w_await | 每个请求耗时（ms，含排队）。SSD ≈ 1 以下，机械盘十几；和基线比 |
+| aqu-sz | 持续偏高 = 排队、饱和 |
+| %util | 机械盘接近 100 = 饱和；**SSD / NVMe / RAID 不可靠** |
+| f/s | flush 请求（dsync / fsync 产生） |
+
+⚠️ wa 高 ≠ 磁盘慢（限速、NFS 时设备可能空闲）；wa 低 ≠ 磁盘没事（CPU 忙时记不出来）。以 iostat 的设备指标为准。
+
+`mkfs.xfs -N` 是"只显示不格式化"；ext4 指定 inode 数用 `mkfs.ext4 -N`。`df -h` 向上取整，精确用 `df -B1K`。
