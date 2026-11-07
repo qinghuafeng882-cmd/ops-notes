@@ -19,5 +19,5 @@
 
 ## 可用 Skill
 
-- `skills/lab-wrapup.md`：实验收尾，把终端记录整理成笔记 + 回忆题
+- `skills/lab-wrapup.md`：实验收尾，把终端记录整理成笔记 + 面试题
 - `skills/triage-site-unreachable.md`：网站或服务连不上时（refused、No route、timed out、403），按报错分流，再逐层验证
