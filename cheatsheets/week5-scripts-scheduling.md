@@ -280,3 +280,45 @@ pidstat -d 1 5              # 哪个进程在读写
 ⚠️ wa 高 ≠ 磁盘慢（限速、NFS 时设备可能空闲）；wa 低 ≠ 磁盘没事（CPU 忙时记不出来）。以 iostat 的设备指标为准。
 
 `mkfs.xfs -N` 是"只显示不格式化"；ext4 指定 inode 数用 `mkfs.ext4 -N`。`df -h` 向上取整，精确用 `df -B1K`。
+
+## 排障：服务与网络（A4）
+
+先用报错和耗时分流，再逐层验证：
+
+| curl 报错 | 耗时 | 回包来源 | 原因 |
+|---|---|---|---|
+| Connection refused（7） | ms | 对端 RST | 没有进程监听这个 IP:端口 |
+| No route to host（7） | ms | 对端 ICMP admin prohibited | 防火墙 REJECT |
+| No route to host（7） | ~3 s | 无；本机邻居表 FAILED | ARP 失败：同网段找不到 MAC |
+| Connection timed out（28） | = `-m` 值 | 无 | 防火墙 DROP |
+
+```bash
+ss -lntp 'sport = :80'                  # 精确过滤端口（grep :80 会匹配 :8090）；看监听地址
+systemctl status <PID>                  # 由 PID 反查属于哪个 unit
+systemctl cat <服务名>                   # 看 unit 文件（ExecStart 里有没有 --bind 127.0.0.1）
+curl -v -m 5 --noproxy "*" http://IP:PORT/   # -v 看握手；-m 总时限；--noproxy 不走代理
+ip route get <IP>                       # 走哪个网卡、用哪个源地址
+ip neigh show <IP>                      # FAILED / INCOMPLETE：ARP 失败；REACHABLE / STALE：ARP 正常
+firewall-cmd --get-active-zones         # 网卡在哪个 zone
+firewall-cmd --list-all                 # 默认 zone 的运行时规则
+firewall-cmd --permanent --list-all     # 同一 zone 的永久规则
+firewall-cmd --add-rich-rule='rule family="ipv4" port port="8888" protocol="tcp" drop'   # 富规则：丢弃
+sudo timeout 20 tcpdump -nn -i enp0s8 host <IP> and port 8888   # 抓包看 SYN / RST / ICMP；-n 端口仍翻译，-nn 都不翻译
+getenforce; ls -Z <文件>                 # Enforcing？文件标签是什么
+sudo ausearch -m AVC -ts recent         # SELinux 拒绝记录（-m 类型，-ts 起始时间）
+namei -l <文件路径>                      # 逐级看权限（DAC）
+sudo restorecon -v <文件>                # 按策略恢复标签（-v 显示改动）
+```
+
+| 现象 | 查什么 |
+|---|---|
+| refused，但服务 active | `ss -lntp`：监听地址是 127.0.0.1 还是 *？端口对不对？ |
+| No route，耗时几 ms | `firewall-cmd --list-all`；抓包看 ICMP |
+| No route，耗时约 3 s | `ip neigh`：目标 IP 是否存在、是否开机 |
+| timed out | 防火墙 DROP：抓包看 SYN 有没有回包 |
+| 403 | `ausearch -m AVC`（SELinux）→ `namei -l`（权限）→ httpd 配置（如 `Require all denied`） |
+
+⚠️ 监听 `127.0.0.1` 只能本机访问；`*` 才是所有地址。服务 active ≠ 在监听你要的端口。
+⚠️ `reload` 会丢掉只存在于运行时的规则。`--runtime-to-permanent` 会覆盖永久配置，先对比两边再执行。
+⚠️ error_log 的 `Permission denied` 不能说明是 SELinux，DAC 和 SELinux 都会打印它。
+⚠️ 防火墙用 `reject-with tcp-reset` 时也会得到 refused，所以 refused 不等于"防火墙已放行"。
