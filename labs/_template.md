@@ -30,20 +30,30 @@
 
 -
 
-## 回忆题
+## 面试题（5 道，对话中作答后批改）
 
-1. （概念）
-<details><summary>答案</summary>
-
-</details>
-
-2. （操作）
-<details><summary>答案</summary>
+1. （概念）为什么要这样做、原理是什么
+<details><summary>批改要点</summary>
 
 </details>
 
-3. （排障）
-<details><summary>答案</summary>
+2. （排障）给出现象，问可能原因和排查顺序
+<details><summary>批改要点</summary>
+
+</details>
+
+3. （排障）给出现象，问可能原因和排查顺序
+<details><summary>批改要点</summary>
+
+</details>
+
+4. （操作）说出命令和关键参数
+<details><summary>批改要点</summary>
+
+</details>
+
+5. （取舍）两种做法的区别，哪种更好，依据什么标准
+<details><summary>批改要点</summary>
 
 </details>
 
