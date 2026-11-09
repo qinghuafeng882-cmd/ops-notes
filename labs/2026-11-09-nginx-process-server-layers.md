@@ -3,7 +3,7 @@
 - 日期：2026-11-09（B1-1、B1-2）
 - 考点：面试高频"Nginx 进程模型""reload 做了什么"；RHCSA —— SELinux 端口类型与文件标签、firewalld 永久规则
 - 环境：Rocky Linux 10.2（VirtualBox）。node1（192.168.56.11）装 Nginx 1.26.3，firewalld 开启，SELinux Enforcing，1 CPU；node2（192.168.56.12）做客户端。node1 上原有 httpd 占 80、8090，Nginx 原有 server 监听 8080
-- 状态：完成（重启后是否仍然生效未验证，见验证表）
+- 状态：完成（重启后持久性已在 B1-3 课前验证，见验证表）
 - 来源：根据课程对话和终端记录整理
 
 ## 目标
@@ -83,9 +83,9 @@ curl -I http://192.168.56.11:8081                # node2 上：200
 | 8081 在监听 | `ss -lntp \| grep ':8081'` | master 与 worker 持有 | ✅ |
 | 本机访问 | `curl -I http://localhost:8081` | 200 | ✅ |
 | node2 访问 | `curl -I http://192.168.56.11:8081` | 200 | ✅ |
-| 端口规则重启后仍在 | `semanage port -l` | 8081 在 http_port_t | 未验证（semanage 写入策略存储，推测可保留） |
-| 标签规则重启后仍在 | `restorecon` / relabel 后 `ls -Z` | httpd_sys_content_t | 未验证 |
-| 防火墙规则重启后仍在 | `firewall-cmd --list-ports` | 含 8081/tcp | 未验证（已用 `--permanent`） |
+| 端口规则重启后仍在 | `sudo semanage port -l \| grep '^http_port_t'` | 8081 在 http_port_t | ✅（11-09 重启后） |
+| 标签规则持久 | `sudo semanage fcontext -l -C \| grep site1` + `sudo restorecon -Rvn /srv/site1` | 有规则；restorecon 无输出 | ✅（重启后 `ls -Z` 不算证据，见 B1-3 笔记） |
+| 防火墙规则重启后仍在 | `sudo firewall-cmd --list-ports` | 含 8081/tcp | ✅（11-09 重启后） |
 
 ## 踩坑
 
