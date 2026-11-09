@@ -57,3 +57,28 @@ sudo restorecon -Rvn <路径>                  # -n 演练；无输出 = 规则�
 ```
 
 ⚠️ 重启后标签还在 ≠ 标签持久（重启不改标签，`chcon` 也会留下），要查规则本身。端口规则和 `--permanent` 防火墙规则重启后还在，才能算证据。
+
+## B1-4：反向代理 proxy_pass
+
+- 两条连接：客户端 → nginx（①），nginx → 后端（②）。后端只看到 nginx 的 IP，默认 HTTP/1.0。
+
+| `proxy_pass` | 后端收到（请求 `/p/a.html`，`location /p/`） |
+|---|---|
+| `http://127.0.0.1:8090` | `/p/a.html`（无 URI，原样） |
+| `http://127.0.0.1:8090/` | `/a.html`（匹配部分换成 `/`） |
+| `http://127.0.0.1:8090/new/` | `/new/a.html` |
+
+⚠️ 看"端口后有没有 URI"，`/` 也算 URI。
+⚠️ 替换的是 location 字面字符串：`location /p` + `.../` → `//a.html`。两边斜杠成对。
+
+| 502 时 `error.log` | 层 |
+|---|---|
+| `111: Connection refused ... upstream` | 后端没监听 |
+| `13: Permission denied ... upstream` | SELinux：`sudo setsebool -P httpd_can_network_connect 1` |
+| `upstream timed out` | 网络或后端慢（通常是 504） |
+
+⚠️ 代理后 `Server:` 头是 nginx；`charset=iso-8859-1` 的错误页来自 Apache。
+
+```bash
+sudo sh -c 'tail -n 3 /var/log/httpd/*access_log'   # 通配符由当前 shell 展开，sudo 不管；目录不可读时要让 root 的 shell 展开
+```
