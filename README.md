@@ -56,6 +56,7 @@
 | W5 | 11-05 | 排障（一）：CPU、内存、负载 | [链接](labs/2026-11-05-troubleshoot-cpu-mem-load.md) |
 | W5 | 11-06 | 排障（二）：磁盘满、inode、删了不释放、iostat | [链接](labs/2026-11-06-troubleshoot-disk.md) |
 | W5 | 11-07 | 排障（三）：网站打不开——服务、端口、防火墙、SELinux、网络 | [链接](labs/2026-11-07-troubleshoot-service-network.md) |
+| W6 | 11-09 | Nginx（一）：进程模型，新建 server 并逐层打通外部访问 | [链接](labs/2026-11-09-nginx-process-server-layers.md) |
 
 ## 补缺口小课：RAID 与虚拟化
 
@@ -66,7 +67,7 @@ RHCSA 大纲不覆盖、但运维面试常问的两块，课外单独学习，�
 | 10-22 | mdadm 搭建 RAID 5 + 热备盘，模拟坏盘、自动重建、换盘 | [链接](labs/2026-10-22-raid5-mdadm-hotspare.md) |
 | 11-04 | KVM/libvirt：嵌套虚拟化失败排查（Hyper-V 独占 AMD-V）与 TCG 方案 | [链接](labs/2026-11-04-kvm-libvirt-tcg.md) |
 
-速查表：[W1 命令行与文本处理](cheatsheets/week1-cli-text.md) · [W2 系统管理](cheatsheets/week2-sysadmin.md) · [W3 存储](cheatsheets/week3-storage.md) · [W4 网络与安全](cheatsheets/week4-network-security.md) · [W5 脚本与计划任务](cheatsheets/week5-scripts-scheduling.md)
+速查表：[W1 命令行与文本处理](cheatsheets/week1-cli-text.md) · [W2 系统管理](cheatsheets/week2-sysadmin.md) · [W3 存储](cheatsheets/week3-storage.md) · [W4 网络与安全](cheatsheets/week4-network-security.md) · [W5 脚本与计划任务](cheatsheets/week5-scripts-scheduling.md) · [W6 Nginx](cheatsheets/week6-nginx.md)
 
 ## 日常用法
 
