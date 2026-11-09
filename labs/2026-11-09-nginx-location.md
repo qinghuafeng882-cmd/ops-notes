@@ -3,7 +3,7 @@
 - 日期：2026-11-09（B1-3）
 - 考点：面试高频"location 匹配优先级"；RHCSA —— SELinux / firewalld 规则持久性
 - 环境：Rocky Linux 10.2（VirtualBox）。node1（192.168.56.11）Nginx 1.26.3，8081 为 site1（`/etc/nginx/conf.d/site1.conf`，root `/srv/site1`）；node2（192.168.56.12）做客户端
-- 状态：完成（第 3 题的 `^~` 改法未动手验证）
+- 状态：完成
 - 来源：根据课程对话和终端记录整理
 
 ## 目标
@@ -68,6 +68,11 @@ curl http://192.168.56.11:8081/lab/img/a.png       # E regex png
 curl http://192.168.56.11:8081/lab/static/a.png    # C ^~ static
 curl http://192.168.56.11:8081/lab/img/a.PNG       # D prefix img
 curl http://192.168.56.11:8081/labx                # B prefix /lab
+
+# 第 3 题验证：D 改成 location ^~ /lab/img/
+sudo vim /etc/nginx/conf.d/site1.conf
+sudo nginx -t && sudo systemctl reload nginx
+curl http://192.168.56.11:8081/lab/img/a.png       # node2 上：D prefix img（正则被跳过）
 ```
 
 ## 验证
@@ -77,7 +82,7 @@ curl http://192.168.56.11:8081/labx                # B prefix /lab
 | nginx 开机自启 | `systemctl is-enabled nginx` | enabled，重启后 active | ✅ |
 | 三条规则重启后仍在 | 见上 | 均保留 | ✅ |
 | 六个 URI 的匹配结果 | node2 上 `curl` | A B E C D B | ✅ |
-| D 改为 `^~` 后 `/lab/img/a.png` 返回 D | `curl` | D prefix img | 未验证 |
+| D 改为 `^~` 后 `/lab/img/a.png` 返回 D | `curl` | D prefix img | ✅ |
 
 ## 踩坑
 
