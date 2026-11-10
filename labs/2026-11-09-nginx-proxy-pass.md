@@ -102,6 +102,6 @@ sudo sh -c 'tail -n 3 /var/log/httpd/*access_log'
 
 ## 复习记录
 
-- [ ] D+1
+- [x] D+1（11-10）
 - [ ] D+3
 - [ ] D+7
