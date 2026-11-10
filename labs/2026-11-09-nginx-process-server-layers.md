@@ -92,6 +92,15 @@ curl -I http://192.168.56.11:8081                # node2 上：200
 - `curl http://localhost` 返回 200 → 打到的是 Apache（80 被 httpd 占）→ 看 `Server:` 头和 `ss`，Nginx 在 8080。
 - `grep -n worker_processer` 没有输出 → 拼错 → 改成 `worker_processes`。
 - `nginx -t` 通过、`reload` 无报错，8081 却没监听 → `-t` 在自己的 shell 里跑，不受 `httpd_t` 限制；reload 只发信号 → 看 `error.log` 和 AVC。
+  - 原因（11-11 验证）：限制跟着进程的域走，域在 exec 时由转换规则决定。systemd（`init_t`）执行 `httpd_exec_t` 的 nginx → 转换到 `httpd_t`；shell（`unconfined_t`）没有转换规则 → 继承，`-t` 留在 `unconfined_t`。`unconfined_t` 不是没有 SELinux，只是规则极宽。
+    ```bash
+    id -Z                                                     # unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+    ps -eZ | grep '[n]ginx'                                   # system_u:system_r:httpd_t:s0（master 1622、worker 98371）
+    ls -Z /usr/sbin/nginx                                     # system_u:object_r:httpd_exec_t:s0
+    sudo dnf install -y setools-console                       # 提供 sesearch
+    sesearch -T -s init_t -t httpd_exec_t -c process          # type_transition init_t httpd_exec_t:process httpd_t;
+    sesearch -T -s unconfined_t -t httpd_exec_t -c process    # 无输出
+    ```
 - `ausearch -m avc -ts recent` 显示 `no matches` → `recent` 只查最近 10 分钟，事件已超过 → 改用 `-ts today`。
 - `semanage -m -t http_port_t -p tcp 8081` 报 `invalid choice` → 漏了 `port` 对象 → 补上 `semanage port -m ...`。
 - 预测"标签不对会报 `Connection refused`"，实际是 403 → refused 是 TCP 层没人监听，标签问题发生在连接建立之后 → 症状与层要配对。
