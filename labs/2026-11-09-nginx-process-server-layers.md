@@ -145,5 +145,5 @@ SELinux：`ausearch -m avc -ts today` 看有没有 `getattr`/`read` 的拒绝；
 ## 复习记录
 
 - [x] D+1（11-10，漏答"nginx -t 为何查不出 bind 被拒"的原因：-t 在用户域跑，运行时 master 在 httpd_t）
-- [ ] D+3
+- [x] D+3（11-12，B1-1～B1-4 合并快问 4.5/5；扣分在本篇：master 必须以 root 运行的第 2、3 个原因没记全）
 - [ ] D+7

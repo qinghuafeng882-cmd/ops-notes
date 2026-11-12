@@ -36,6 +36,7 @@ SHOW GRANTS FOR 'app'@'192.168.56.12';     -- GRANT USAGE ON *.* = 无全局权�
 ⚠️ MySQL 客户端里 `localhost` = socket，不是 127.0.0.1。
 ⚠️ 账号 `'user'@'host'`：host 是客户端来源；同名不同 host 是两个账号；和 Linux 账号无关。
 ⚠️ host 匹配会用反向解析的主机名（127.0.0.1 → localhost）；生产常 `skip_name_resolve=ON`，账号写 IP。
+⚠️ 报错里的 `'app'@'node2'` 是客户端来源（能反解就显示主机名），不是账号定义；实际匹配到哪个账号看 `SELECT CURRENT_USER();`（不是 `SHOW`）。
 ⚠️ RHEL 装完 root 空密码，先 `ALTER USER` 设密码。
 ⚠️ 8.x：先 `CREATE USER` 再 `GRANT`（GRANT 不再建用户）；不需要 `FLUSH PRIVILEGES`。
 ⚠️ 不开 `'root'@'%'`，应用单独建最小权限账号。

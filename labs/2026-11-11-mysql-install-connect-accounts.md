@@ -71,7 +71,8 @@ mysql -u app -p -h 192.168.56.11 labdb   # CURRENT_USER() = app@192.168.56.12
 | 3306 SELinux 类型 | `semanage port -l` | mysqld_port_t | ✅ |
 | node2 远程登录 | `mysql -u app -p -h 192.168.56.11 labdb` | 进入，CURRENT_USER = app@192.168.56.12 | ✅ |
 | app 看得到的库 | `SHOW DATABASES;` | information_schema、labdb、performance_schema | ✅ |
-| 重启后仍生效 | | | 未验证 |
+| 重启后仍生效 | node1 `systemctl is-active nginx httpd mysqld` + `ss -lntp`；node2 `mysql -u app -p -h 192.168.56.11` | 均 active；3306/33060 在监听；app 登录成功 | ✅（11-12，mysqld 重启后） |
+| 远程输错密码 | node2 `mysql -u app -p -h 192.168.56.11` 输错密码 | ERROR 1045 | ✅（11-12） |
 
 ## 结论
 
@@ -93,10 +94,12 @@ mysql -u app -p -h 192.168.56.11 labdb   # CURRENT_USER() = app@192.168.56.12
 - 装完 root 空密码，任何 Linux 用户 `mysql -u root` 即获最高权限 → RHEL 打包初始化时 root 设空密码（推测为 `--initialize-insecure`）→ 立刻 `ALTER USER` 设密码。
 - MySQL 8：`GRANT` 不再顺带建用户，先 `CREATE USER` 再 `GRANT`；`CREATE USER`/`GRANT` 立即生效，不需要 `FLUSH PRIVILEGES`。
 - `-p密码` 会进 bash 历史和 `ps`；只写 `-p`。mysql 客户端默认不把含 `IDENTIFIED`/`PASSWORD` 的语句写进 `~/.mysql_history`。
+- （11-12）想看当前匹配账号时写了 `SHOW CURRENT_USER()` → `CURRENT_USER()` 是函数，不是 SHOW 的对象 → 改成 `SELECT CURRENT_USER();`。
 
 ## 卡点 / 没想明白的
 
 - 远程场景下的 ERROR 1045（如 app 输错密码）还没实际触发过。
+  - 已触发（11-12）：node2 上 `mysql -u app -p -h 192.168.56.11` 输错密码 → `ERROR 1045 (28000): Access denied for user 'app'@'node2' (using password: YES)`。报错里显示 `node2` 而不是 IP，是因为 node1 的 `/etc/hosts` 能把 192.168.56.12 解析成 node2。
 
 ## 面试题（5 道，对话中作答后批改）
 
@@ -133,6 +136,6 @@ socket。MySQL 客户端把 localhost 当作"走 socket 文件"，写 IP 才走 
 ## 复习记录
 
 - 课后（11-11）：4/5。第 2 题只答「网络层没建立连接」，没区分 111/113/110（111 = 没人监听）。
-- [ ] D+1
+- [x] D+1（11-12，5/5，2003 的 111 refused / 113 No route to host / 110 timed out 已分清）
 - [ ] D+3
 - [ ] D+7
