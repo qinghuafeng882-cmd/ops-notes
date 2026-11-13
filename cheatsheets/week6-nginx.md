@@ -5,6 +5,11 @@
 - master（root）：读配置、建监听 socket、fork worker、保活（SIGCHLD）、响应信号；worker（`nginx` 用户）：`accept` 并处理请求。
 - worker 靠 fork 继承监听 fd，所以 `ss -p` 里 master 和 worker 都显示。
 - `user nginx;` 由 master 用来给 worker 降权；`worker_processes auto;` = 按 CPU 核数。
+- master 必须是 root 的三个原因（11-13 重讲补记，仓库无课堂原版）：
+  1. 绑定 1024 以下特权端口（80/443）。
+  2. 读 root 才能读的文件：TLS 私钥（常为 600 root）、打开日志文件。
+  3. 给 worker 降权：setuid/setgid 切成 `user` 指定的用户，只有 root 能做（非 root 启动时 `user` 指令不生效）。
+  - 所以 master 一直保持 root：reload 时还要重新绑定新端口、重读证书。
 - reload = SIGHUP：先验新配置，再起新 worker，旧 worker 处理完手头请求才退；绑定失败只写 `error.log`，旧配置继续用。
 
 ```bash

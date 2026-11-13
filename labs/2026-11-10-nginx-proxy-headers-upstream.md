@@ -126,6 +126,6 @@ getsebool httpd_can_network_connect      # on
 
 ## 复习记录
 
-- [ ] D+1
-- [ ] D+3
+- [ ] D+1（未做：11-11、11-12 无记录，由 11-13 的 D+3 一并覆盖）
+- [x] D+3（11-13，快问 4.5/5。扣分在 upstream 题：`upsteam` 拼错、组名写成 `backup` 与 `proxy_pass http://backend` 不一致，并且没答出 upstream 必须写在 http 层（server 外）。继承题结论对，但表述成「后面覆盖前面」，应为「下层写了任意一条，上层的全部不继承」）
 - [ ] D+7
