@@ -21,3 +21,5 @@
 
 - `skills/lab-wrapup.md`：实验收尾，把终端记录整理成笔记 + 面试题
 - `skills/triage-site-unreachable.md`：网站或服务连不上时（refused、No route、timed out、403），按报错分流，再逐层验证
+- `skills/review-quiz.md`：D+1 / D+3 / D+7 间隔复习快问快答（一题一问、不超纲）与复习记录更新
+- `skills/new-lesson.md`：新课讲授与带做实验（先讲原理和术语，再分步实操，最后按 `lab-wrapup` 收尾）
