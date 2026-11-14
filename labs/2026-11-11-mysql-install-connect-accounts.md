@@ -137,5 +137,5 @@ socket。MySQL 客户端把 localhost 当作"走 socket 文件"，写 IP 才走 
 
 - 课后（11-11）：4/5。第 2 题只答「网络层没建立连接」，没区分 111/113/110（111 = 没人监听）。
 - [x] D+1（11-12，5/5，2003 的 111 refused / 113 No route to host / 110 timed out 已分清）
-- [ ] D+3
+- [x] D+3（11-14，4/5；第 4 题将 SELECT CURRENT_USER(); 误写为 SHOW CURRENT_USER();）
 - [ ] D+7
