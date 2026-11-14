@@ -56,7 +56,13 @@
 | W5 | 11-05 | 排障（一）：CPU、内存、负载 | [链接](labs/2026-11-05-troubleshoot-cpu-mem-load.md) |
 | W5 | 11-06 | 排障（二）：磁盘满、inode、删了不释放、iostat | [链接](labs/2026-11-06-troubleshoot-disk.md) |
 | W5 | 11-07 | 排障（三）：网站打不开——服务、端口、防火墙、SELinux、网络 | [链接](labs/2026-11-07-troubleshoot-service-network.md) |
+| W5 | 11-08 | 小测与模拟面试复盘（A1–A4） | [链接](labs/2026-11-08-quiz-mock-review.md) |
 | W6 | 11-09 | Nginx（一）：进程模型，新建 server 并逐层打通外部访问 | [链接](labs/2026-11-09-nginx-process-server-layers.md) |
+| W6 | 11-09 | Nginx（二）：location 匹配规则与重启持久性验证（B1-3） | [链接](labs/2026-11-09-nginx-location.md) |
+| W6 | 11-09 | Nginx（三）：反向代理 proxy_pass 与 URI 改写（B1-4） | [链接](labs/2026-11-09-nginx-proxy-pass.md) |
+| W6 | 11-10 | Nginx（四）：反代传递客户端信息与 upstream 负载均衡（B1-5） | [链接](labs/2026-11-10-nginx-proxy-headers-upstream.md) |
+| W6 | 11-11 | MySQL 第一课：安装、连接方式、账号与远程访问（B2-1） | [链接](labs/2026-11-11-mysql-install-connect-accounts.md) |
+| W6 | 11-13 | MySQL 第二课：mysqldump 备份恢复 + binlog 时间点恢复（B2-2） | [链接](labs/2026-11-13-mysql-backup-restore.md) |
 
 ## 补缺口小课：RAID 与虚拟化
 
@@ -67,7 +73,7 @@ RHCSA 大纲不覆盖、但运维面试常问的两块，课外单独学习，�
 | 10-22 | mdadm 搭建 RAID 5 + 热备盘，模拟坏盘、自动重建、换盘 | [链接](labs/2026-10-22-raid5-mdadm-hotspare.md) |
 | 11-04 | KVM/libvirt：嵌套虚拟化失败排查（Hyper-V 独占 AMD-V）与 TCG 方案 | [链接](labs/2026-11-04-kvm-libvirt-tcg.md) |
 
-速查表：[W1 命令行与文本处理](cheatsheets/week1-cli-text.md) · [W2 系统管理](cheatsheets/week2-sysadmin.md) · [W3 存储](cheatsheets/week3-storage.md) · [W4 网络与安全](cheatsheets/week4-network-security.md) · [W5 脚本与计划任务](cheatsheets/week5-scripts-scheduling.md) · [W6 Nginx](cheatsheets/week6-nginx.md)
+速查表：[W1 命令行与文本处理](cheatsheets/week1-cli-text.md) · [W2 系统管理](cheatsheets/week2-sysadmin.md) · [W3 存储](cheatsheets/week3-storage.md) · [W4 网络与安全](cheatsheets/week4-network-security.md) · [W5 脚本与计划任务](cheatsheets/week5-scripts-scheduling.md) · [W6 Nginx](cheatsheets/week6-nginx.md) · [W6 MySQL](cheatsheets/week6-mysql.md)
 
 ## 日常用法
 
