@@ -63,6 +63,7 @@
 | W6 | 11-10 | Nginx（四）：反代传递客户端信息与 upstream 负载均衡（B1-5） | [链接](labs/2026-11-10-nginx-proxy-headers-upstream.md) |
 | W6 | 11-11 | MySQL 第一课：安装、连接方式、账号与远程访问（B2-1） | [链接](labs/2026-11-11-mysql-install-connect-accounts.md) |
 | W6 | 11-13 | MySQL 第二课：mysqldump 备份恢复 + binlog 时间点恢复（B2-2） | [链接](labs/2026-11-13-mysql-backup-restore.md) |
+| W6 | 11-14 | MySQL 第三课：GTID 主从复制搭建与只读验证（B2-3） | [链接](labs/2026-11-14-mysql-replication.md) |
 
 ## 补缺口小课：RAID 与虚拟化
 

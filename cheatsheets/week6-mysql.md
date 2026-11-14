@@ -74,3 +74,35 @@ SHOW BINARY LOG STATUS;              -- 当前 binlog 文件 + 位置（8.4 无 
 ⚠️ `>` 由 bash 先处理：目录不存在时 mysqldump 不会运行；mysqldump 失败也会留下空文件或被清空的文件，要看大小和内容。
 ⚠️ 误删后先止损：停写入、保护 binlog（别重启折腾、别清 binlog）。
 ⚠️ `information_schema` 是库，表要写 `information_schema.tables`。
+
+
+## B2-3：GTID 主从复制（8.4 新语法）
+
+```ini
+# /etc/my.cnf.d/mysql-server.cnf 的 [mysqld] 下
+server_id = 1                      # 主从必须唯一（主 1、从 2）
+gtid_mode = ON
+enforce_gtid_consistency = ON
+read_only = ON                     # 仅从库加：拦普通账号写（ERROR 1290），不拦复制线程和 root
+```
+
+```sql
+-- 主库建最小权限复制账号（必须 ON *.*）
+CREATE USER 'repl'@'192.168.56.12' IDENTIFIED BY '...';
+GRANT REPLICATION SLAVE ON *.* TO 'repl'@'192.168.56.12';
+
+-- 从库清 GTID 历史后导入主库 mysqldump 备份，再配主库源
+RESET BINARY LOGS AND GTIDS;       -- 8.4 新语法（替代 RESET MASTER）
+CHANGE REPLICATION SOURCE TO
+  SOURCE_HOST = '192.168.56.11', SOURCE_PORT = 3306,
+  SOURCE_USER = 'repl', SOURCE_PASSWORD = '...',
+  SOURCE_AUTO_POSITION = 1, GET_SOURCE_PUBLIC_KEY = 1;
+START REPLICA;
+SHOW REPLICA STATUS\G              -- 看 IO/SQL 双 Yes、Seconds_Behind_Source、Last_*_Error、Executed_Gtid_Set
+```
+
+⚠️ 1+2 线程：主库 Binlog Dump 线程 → 从库 **IO 线程**（拉 binlog 写进本地 **Relay Log**）→ 从库 **SQL 线程**（读 Relay Log 重放）。
+⚠️ `Replica_IO_Running: No`：先看 `Last_IO_Error`，查连接主库段（网络/3306 防火墙、复制账号密码、主库状态、`server_id` 冲突）。
+⚠️ `Replica_SQL_Running: No`：本地回放报错（如主从数据不一致，主库删了从库不存在的库/表/用户）。
+⚠️ `GET_SOURCE_PUBLIC_KEY = 1`：MySQL 8.4 默认 `caching_sha2_password`，非 TLS 时必加，否则报需要安全连接。
+⚠️ `mysql ... -e "SQL" | grep ...`：`| grep` 是 bash 管道，必须写在 `-e "..."` 引号外面；不加 `-e` 末尾字符串会被当库名（1049）。
