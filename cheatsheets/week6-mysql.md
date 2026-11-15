@@ -106,3 +106,48 @@ SHOW REPLICA STATUS\G              -- 看 IO/SQL 双 Yes、Seconds_Behind_Source
 ⚠️ `Replica_SQL_Running: No`：本地回放报错（如主从数据不一致，主库删了从库不存在的库/表/用户）。
 ⚠️ `GET_SOURCE_PUBLIC_KEY = 1`：MySQL 8.4 默认 `caching_sha2_password`，非 TLS 时必加，否则报需要安全连接。
 ⚠️ `mysql ... -e "SQL" | grep ...`：`| grep` 是 bash 管道，必须写在 `-e "..."` 引号外面；不加 `-e` 末尾字符串会被当库名（1049）。
+
+
+## B2-4：慢查询、SHOW PROCESSLIST、EXPLAIN 与主从报错处理
+
+```sql
+-- 慢查询日志（动态生效；长久生效写 /etc/my.cnf.d/mysql-server.cnf 或 SET PERSIST）
+SET GLOBAL slow_query_log = 'ON';
+SET GLOBAL long_query_time = 0.05;               -- 数值型不加引号；只影响新连接，老连接需 SET SESSION
+SELECT @@session.long_query_time, @@global.long_query_time;
+
+-- 现场抓卡顿与查杀
+SHOW FULL PROCESSLIST;                           -- 不加 FULL 会截断 100 字符以上的 SQL
+KILL <Id>;                                       -- 断整条连接（客户端 2013）；仅杀当前 SQL 用 KILL QUERY <Id>
+
+-- 执行计划（不真执行）
+EXPLAIN SELECT * FROM t_big_order WHERE order_no = 'ORD-088888'\G
+
+-- 8.4 多线程复制定位具体出错 worker 与 GTID（SHOW REPLICA STATUS\G 只报 Coordinator 停止时）
+SELECT WORKER_ID, LAST_ERROR_NUMBER, LAST_ERROR_MESSAGE, APPLYING_TRANSACTION
+FROM performance_schema.replication_applier_status_by_worker WHERE LAST_ERROR_NUMBER != 0\G
+
+-- GTID 模式跳过单个故障事务（先确认允许数据差异；若开了 super_read_only 需先临时关掉）
+STOP REPLICA;
+SET GTID_NEXT = '<Source_UUID:序号>';
+BEGIN; COMMIT;
+SET GTID_NEXT = 'AUTOMATIC';
+START REPLICA;
+```
+
+```bash
+sudo tail -n 25 /var/lib/mysql/node1-slow.log
+sudo mysqldumpslow -s t /var/lib/mysql/node1-slow.log   # 汇总慢查询；日志类数少于 -t N 时 8.4 Perl 脚本会 die 在 163 行
+```
+
+| `EXPLAIN` 字段 | 常见值 / 关注点 |
+|---|---|
+| `type` | `const`（主键/唯一索引）> `ref`（普通索引）> `range`（范围 / 右模糊 `'ORD-08%'`）> `index`（全索引）> `ALL`（全表扫描） |
+| `key` / `rows` | 实际选中索引（`NULL` = 未走索引）/ InnoDB 估算扫描行数 |
+| `Extra` | `Using index`（覆盖索引，不回主表）；`Using index condition`（ICP 索引条件下推）；`Using filesort`/`Using temporary`（额外排序/临时表） |
+
+⚠️ 索引失效常见坑：对索引列套函数（`LEFT(col, 9)`）、左模糊或前缀区分度过低（`LIKE '%abc'` / `'ORD-%'`）。
+⚠️ `read_only = ON` 不拦 `root`（防管理员连错终端误写从库必开 `super_read_only = ON`）。
+⚠️ GTID 模式下 `SET GLOBAL sql_replica_skip_counter = 1;` 仅出 `Warning 4016` 不生效（`Skip_Counter` 仍为 `0`），不能用来跳过 GTID 报错。
+⚠️ 慢日志里 `# Time: ...Z` 为 UTC 时间；`Rows_sent: 1  Rows_examined: 100000` 是缺索引典型信号。
+⚠️ 记不住 `performance_schema` 长表名时，直接 `SHOW TABLES FROM performance_schema LIKE 'replication%';`。
