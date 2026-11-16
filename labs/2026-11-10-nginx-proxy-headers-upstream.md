@@ -128,4 +128,4 @@ getsebool httpd_can_network_connect      # on
 
 - [ ] D+1（未做：11-11、11-12 无记录，由 11-13 的 D+3 一并覆盖）
 - [x] D+3（11-13，快问 4.5/5。扣分在 upstream 题：`upsteam` 拼错、组名写成 `backup` 与 `proxy_pass http://backend` 不一致，并且没答出 upstream 必须写在 http 层（server 外）。继承题结论对，但表述成「后面覆盖前面」，应为「下层写了任意一条，上层的全部不继承」）
-- [ ] D+7
+- [x] D+7（11-17，1/1（合并复习）；upstream 在 http 层、server 外已掌握，并理解原因：命名后端池供多个 server 共享，官方 Context 仅 http）

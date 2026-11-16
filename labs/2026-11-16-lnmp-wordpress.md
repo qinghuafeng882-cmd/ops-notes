@@ -192,6 +192,6 @@ PHP-FPM 执行 WordPress 的 index.php 后由 WordPress 返回 302，Nginx 只�
 
 ## 复习记录
 
-- [ ] D+1
+- [x] D+1（11-17，2/2（合并复习）；nginx -t 答对习惯但误以为直接 reload 语法错会中断服务——实际 master 解析失败会保留旧配置，风险是改动静默不生效、错误配置留到下次 restart 才爆发；302 由 WordPress 发出已掌握）
 - [ ] D+3
 - [ ] D+7
