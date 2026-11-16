@@ -65,6 +65,7 @@
 | W6 | 11-13 | MySQL 第二课：mysqldump 备份恢复 + binlog 时间点恢复（B2-2） | [链接](labs/2026-11-13-mysql-backup-restore.md) |
 | W6 | 11-14 | MySQL 第三课：GTID 主从复制搭建与只读验证（B2-3） | [链接](labs/2026-11-14-mysql-replication.md) |
 | W6 | 11-15 | MySQL 第四课：慢查询、PROCESSLIST、EXPLAIN 与主从报错处理（B2-4） | [链接](labs/2026-11-15-mysql-slow-explain-repl-errors.md) |
+| W7 | 11-16 | LNMP 第一课：PHP-FPM、Nginx FastCGI、权限与 SELinux 部署 WordPress，502 演练（B3-1） | [链接](labs/2026-11-16-lnmp-wordpress.md) |
 
 ## 补缺口小课：RAID 与虚拟化
 
@@ -75,7 +76,7 @@ RHCSA 大纲不覆盖、但运维面试常问的两块，课外单独学习，�
 | 10-22 | mdadm 搭建 RAID 5 + 热备盘，模拟坏盘、自动重建、换盘 | [链接](labs/2026-10-22-raid5-mdadm-hotspare.md) |
 | 11-04 | KVM/libvirt：嵌套虚拟化失败排查（Hyper-V 独占 AMD-V）与 TCG 方案 | [链接](labs/2026-11-04-kvm-libvirt-tcg.md) |
 
-速查表：[W1 命令行与文本处理](cheatsheets/week1-cli-text.md) · [W2 系统管理](cheatsheets/week2-sysadmin.md) · [W3 存储](cheatsheets/week3-storage.md) · [W4 网络与安全](cheatsheets/week4-network-security.md) · [W5 脚本与计划任务](cheatsheets/week5-scripts-scheduling.md) · [W6 Nginx](cheatsheets/week6-nginx.md) · [W6 MySQL](cheatsheets/week6-mysql.md)
+速查表：[W1 命令行与文本处理](cheatsheets/week1-cli-text.md) · [W2 系统管理](cheatsheets/week2-sysadmin.md) · [W3 存储](cheatsheets/week3-storage.md) · [W4 网络与安全](cheatsheets/week4-network-security.md) · [W5 脚本与计划任务](cheatsheets/week5-scripts-scheduling.md) · [W6 Nginx](cheatsheets/week6-nginx.md) · [W6 MySQL](cheatsheets/week6-mysql.md) · [W7 LNMP](cheatsheets/week7-lnmp.md)
 
 ## 日常用法
 
