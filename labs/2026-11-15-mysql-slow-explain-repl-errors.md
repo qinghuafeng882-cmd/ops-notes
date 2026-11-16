@@ -208,6 +208,6 @@ mysql -u root -p labdb -e "SET sql_log_bin = 0; DELETE FROM t_order WHERE id = 9
 
 ## 复习记录
 
-- [ ] D+1
+- [x] D+1（11-16，3.5/5；`Using index` 误答为「用上了索引」，实为覆盖索引、无需回表，是否用索引看 `key` 列；GTID 跳过事务命令没记全：`SET GTID_NEXT='UUID:N'; BEGIN; COMMIT; SET GTID_NEXT='AUTOMATIC';`，是会话变量，不是 `SET GLOBAL`）
 - [ ] D+3
 - [ ] D+7

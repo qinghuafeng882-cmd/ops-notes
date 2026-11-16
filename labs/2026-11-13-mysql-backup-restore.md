@@ -131,5 +131,5 @@ binlog.000003 中 793 → 1330 的事件：
 ## 复习记录
 
 - [x] D+1（11-14，5/5，decode-rows -v 与重放区别、管道、> 由 bash 先处理及 --stop-position 均已掌握）
-- [ ] D+3
+- [x] D+3（11-16，4.5/5；`--base64-output=decode-rows -v` 误写成 recode，只用于看，重放时不能加）
 - [ ] D+7
