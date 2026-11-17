@@ -66,6 +66,7 @@
 | W6 | 11-14 | MySQL 第三课：GTID 主从复制搭建与只读验证（B2-3） | [链接](labs/2026-11-14-mysql-replication.md) |
 | W6 | 11-15 | MySQL 第四课：慢查询、PROCESSLIST、EXPLAIN 与主从报错处理（B2-4） | [链接](labs/2026-11-15-mysql-slow-explain-repl-errors.md) |
 | W7 | 11-16 | LNMP 第一课：PHP-FPM、Nginx FastCGI、权限与 SELinux 部署 WordPress，502 演练（B3-1） | [链接](labs/2026-11-16-lnmp-wordpress.md) |
+| W7 | 11-17 | Nginx HTTPS：openssl 自签证书、443 ssl、HTTP→HTTPS 301 跳转，SELinux 403 排障（B3-2） | [链接](labs/2026-11-17-nginx-https.md) |
 
 ## 补缺口小课：RAID 与虚拟化
 

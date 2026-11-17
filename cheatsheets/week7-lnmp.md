@@ -43,3 +43,23 @@ location ~ \.php$ {
 | Permission denied | nginx 无 socket 权限（ACL） |
 | Connection refused | TCP 端口无人监听 |
 | （504）timed out | 上游慢，看 slowlog |
+
+## B3-2 Nginx HTTPS
+
+| 做什么 | 命令 / 配置 |
+|---|---|
+| 一步生成私钥+自签证书 | `openssl req -x509 -newkey rsa:2048 -nodes -days 365 -keyout X.key -out X.crt -subj "/CN=IP" -addext "subjectAltName=IP:IP"` |
+| 查看证书字段 | `openssl x509 -in X.crt -noout -subject -dates -ext subjectAltName`（全部：`-text -noout`） |
+| 证书/私钥位置 | `/etc/pki/tls/certs/`（644）、`/etc/pki/tls/private/`（私钥 600 root） |
+| 启用 TLS | `listen 443 ssl;` + `ssl_certificate` + `ssl_certificate_key` + `ssl_protocols TLSv1.2 TLSv1.3;` |
+| HTTP 跳 HTTPS | `return 301 https://$host$request_uri;` |
+| 防火墙 | `firewall-cmd --add-service=https --permanent && firewall-cmd --reload` |
+| 客户端信任自签证书 | 临时 `curl --cacert X.crt URL`；系统级放 `/etc/pki/ca-trust/source/anchors/` + `update-ca-trust` |
+
+curl 报错速判：
+
+| 现象 | 含义 |
+|---|---|
+| `(60) self-signed certificate` | 证书不受信任（预期），`-k` 可跳过校验但仍加密 |
+| `(35) ... packet length too long` | 握手失败：443 没写 `ssl`，对端讲明文 HTTP |
+| 握手成功但 403 + error.log `Permission denied` | 多半 SELinux `var_t`，`ls -Z` 确认 |
