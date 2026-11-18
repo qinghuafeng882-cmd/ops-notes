@@ -63,3 +63,31 @@ curl 报错速判：
 | `(60) self-signed certificate` | 证书不受信任（预期），`-k` 可跳过校验但仍加密 |
 | `(35) ... packet length too long` | 握手失败：443 没写 `ssl`，对端讲明文 HTTP |
 | 握手成功但 403 + error.log `Permission denied` | 多半 SELinux `var_t`，`ls -Z` 确认 |
+
+## access log 汇总（11-18）
+
+| 做什么 | 命令 |
+|---|---|
+| 生效的日志路径 | `sudo nginx -T 2>/dev/null \| grep -E 'access_log\|log_format'` |
+| 看 main 及后 3 行 | `sudo nginx -T \| grep -A 3 'log_format'` |
+| 最近两行 | `sudo tail -n 2 /var/log/nginx/access.log` |
+| 本课格式拆 IP、路径、状态码 | `sudo awk '{print $1,$7,$9}' /var/log/nginx/access.log` |
+
+- 本课：`access_log /var/log/nginx/access.log main;`。`$9` 是这条格式的状态码，`$7` 是路径。awk 按空白拆，双引号不成组，不要套到别的格式。
+- `nginx -T` 的两行检查提示在 stderr，不进管道；要安静加 `2>/dev/null`。原文未抄。
+- `grep -A` = After，后 N 行含空行。
+- `sort | uniq -c`：`uniq` 只合并相邻相同行。`wc -l 文件` 带文件名，`wc -l < 文件` 只有行数。
+- `bash -n` 只查语法、不执行；无输出不能证明文件存在。`>&2` 错误走 stderr。
+- 课堂脚本只此版（`~/nginx-log-summary.sh`）。空文件、无参数、空格路径、普通用户不可读、并发写，都未验证。
+
+```bash
+#!/bin/bash
+log_file="$1"
+if [ ! -r "$log_file" ]; then
+ echo "文件不可读，退出！" >&2
+ exit 1
+fi
+echo "请求总数：$(wc -l < "$log_file")"
+echo "状态码统计如下："
+awk '{print $9}' "$log_file" | sort | uniq -c
+```
