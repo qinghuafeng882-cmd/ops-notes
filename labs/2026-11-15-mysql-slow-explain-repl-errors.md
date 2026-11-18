@@ -19,6 +19,7 @@
   - `possible_keys` / `key`：可用索引 vs 实际选用索引。
   - `rows`：InnoDB 抽样估算扫描行数。
   - `Extra`：`Using index`（覆盖索引，索引树已包含全部要查列，无需回主表）、`Using index condition`（索引条件下推 ICP）、`Using filesort`/`Using temporary`。
+- （11-18 复习补讲）InnoDB 聚簇索引的叶子是完整行；普通二级索引的叶子含主键。覆盖是指这一次查询要的列都在所用索引里。回表是按主键再读聚簇索引上的行，不等于全表扫描。
 - **常见索引失效场景**：左模糊或前缀区分度过低（如 `LIKE 'ORD-%088888'` 优化器放弃索引）、在索引列上套函数（如 `LEFT(order_no, 9)`）。
 - **GTID 主从 `1062` 恢复与取舍**：MySQL 8.4 默认多线程复制，`SHOW REPLICA STATUS\G` 常只报 Coordinator 停止，需查 `performance_schema.replication_applier_status_by_worker` 看具体 `LAST_ERROR_MESSAGE` 和卡住的 `APPLYING_TRANSACTION`。GTID 模式下 `SET GLOBAL sql_replica_skip_counter = 1;` 仅产生 `Warning 4016`（`Skip_Counter` 仍为 `0`）而不生效；必须用 `SET GTID_NEXT = '<UUID:序号>'; BEGIN; COMMIT; SET GTID_NEXT = 'AUTOMATIC';` 注入空事务跳过，但会留下主从数据不一致，若从库是脏数据应优先修正/删除从库冲突行再 `START REPLICA`。
 
@@ -209,5 +210,5 @@ mysql -u root -p labdb -e "SET sql_log_bin = 0; DELETE FROM t_order WHERE id = 9
 ## 复习记录
 
 - [x] D+1（11-16，3.5/5；`Using index` 误答为「用上了索引」，实为覆盖索引、无需回表，是否用索引看 `key` 列；GTID 跳过事务命令没记全：`SET GTID_NEXT='UUID:N'; BEGIN; COMMIT; SET GTID_NEXT='AUTOMATIC';`，是会话变量，不是 `SET GLOBAL`）
-- [ ] D+3
+- [x] D+3（11-18，1/1（合并复习，三篇合计 3.5/5，不是本篇单独 5 题）；只抽了 `Using index`：覆盖索引、不回表。GTID 跳过事务未测，不得称掌握）
 - [ ] D+7
