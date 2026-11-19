@@ -1,4 +1,4 @@
-# W7 速查：LNMP / WordPress
+# W7 速查：LNMP / WordPress / Keepalived
 
 ## B3-1 PHP-FPM + WordPress
 
@@ -91,3 +91,45 @@ echo "请求总数：$(wc -l < "$log_file")"
 echo "状态码统计如下："
 awk '{print $9}' "$log_file" | sort | uniq -c
 ```
+
+## Keepalived VIP 与健康检查（11-18、11-19）
+
+| 做什么 | 要点 |
+|---|---|
+| 选 VIP | DHCP 服务器 192.168.56.100，池 .101–.254。`.50` 在池外；`arping -D -I enp0s8 -c 3` 无回应也不等于绝对空闲。`.200` 在池内，不选 |
+| 页面 | `conf.d/ha-test.conf` 监听 8088，`return 200` 各自标签 |
+| 放行 8088 | `semanage port -a -t http_port_t -p tcp 8088`；`firewall-cmd` permanent 开 `8088/tcp` 再 reload |
+| VRRP | IP 协议 112，不是 TCP/UDP 端口。rich rule：source 对方固定 IP，`protocol value="vrrp" accept`，permanent 后 reload。完整规则字符串未逐字留存 |
+| VI_1 | 两台 `state BACKUP`，`interface enp0s8`，`virtual_router_id 51`，priority 150/100，`advert_int 1`，unicast 指向对方，VIP `.50/24 dev enp0s8` |
+| 看地址 | `ip -br -4 addr show`。`ip -br -4 show` 少了 `addr` |
+| 健康检查 | `weight 0`：失败进入 FAULT，不是只降优先级。`fall 2` 连续失败，`rise 2` 连续成功 |
+| 日志里的 0 priority | `sent 0 priority` 是退出 MASTER 的通告，配置里的 150 没有被改成 0 |
+| 开机 | `systemctl enable` 只设置开机，不等于 `start`。11-19 enable 之后没有再重启 |
+
+检查脚本（root:root 755），返回码就是最后这条 curl 的返回码。0 成功，非 0 失败。退出码 2 是初始化失败；停掉 Nginx 时看到过 7，没有 curl 报错原文。
+
+```bash
+#!/bin/bash
+/usr/bin/curl --noproxy '*' -fsS \
+  --connect-timeout 1 --max-time 2 \
+  http://127.0.0.1:8088/ >/dev/null 2>&1
+```
+
+```text
+global_defs {
+    script_user keepalived_script
+    enable_script_security
+}
+vrrp_script chk_nginx {
+    script "/usr/local/bin/check-nginx-ha.sh"
+    interval 3
+    timeout 3
+    fall 2
+    rise 2
+    weight 0
+}
+```
+
+`track_script { chk_nginx }` 写在 VI_1 里。手动跑脚本只把退出码交给终端，不代替 Keepalived 的定期检查。
+
+这课没有做：11-18 的重启/断电/开机自启、只停 Nginx 的实测、enable 之后的再重启、断电、两台都坏、网络隔离、数据同步。
