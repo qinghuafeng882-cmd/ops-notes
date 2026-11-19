@@ -1,4 +1,4 @@
-# W7 速查：LNMP / WordPress
+# W7 速查：LNMP / WordPress / Keepalived
 
 ## B3-1 PHP-FPM + WordPress
 
@@ -91,3 +91,48 @@ echo "请求总数：$(wc -l < "$log_file")"
 echo "状态码统计如下："
 awk '{print $9}' "$log_file" | sort | uniq -c
 ```
+
+## Keepalived VIP 与健康检查（11-18、11-19）
+
+| 做什么 | 要点 |
+|---|---|
+| 选 VIP | DHCP 服务器 192.168.56.100，池 .101–.254。`arping -D -I enp0s8 -c 3 192.168.56.200` 无回应，但在池内，不选。`arping -D -I enp0s8 -c 3 192.168.56.50` 无回应且在池外，选它。无回应不等于绝对空闲 |
+| 页面 | `/etc/nginx/conf.d/ha-test.conf`：`listen 8088;`、`server_name _;`、`location /` 里 `default_type text/plain;`、`return 200 "ha test from node1\n";`。node2 只换标签 |
+| 放行 8088 | `semanage port -a -t http_port_t -p tcp 8088`；`firewall-cmd` permanent 开 `8088/tcp` 再 reload |
+| VRRP | IP 协议 112，不是 TCP/UDP 端口。node1：`sudo firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.56.12" protocol value="vrrp" accept'`。node2 的 source 换成 `192.168.56.11`。然后 `sudo firewall-cmd --reload` |
+| VI_1 | 两台 `state BACKUP`，`interface enp0s8`，`virtual_router_id 51`，priority 150/100，`advert_int 1`，unicast 指向对方，VIP `.50/24 dev enp0s8`。node2 的 `enp0s8` 上另有 192.168.56.22/24，用途未知，未处理 |
+| 看地址 | `ip -br -4 addr show`。`ip -br -4 show` 少了 `addr`。VIP：`curl --connect-timeout 2 --max-time 5 http://192.168.56.50:8088/` |
+| 启停 Keepalived | `rpm -q keepalived` 为 `keepalived-2.2.8-9.el10.x86_64`；最初 `systemctl is-active keepalived` 是 inactive。备份 `sudo cp -a /etc/keepalived/keepalived.conf /etc/keepalived/keepalived.conf.before-ha`。切换用 `sudo systemctl start/stop keepalived` |
+| 健康检查 | `weight 0`：失败进入 FAULT，不是只降优先级。`fall 2` 连续失败，`rise 2` 连续成功。手动跑脚本只把退出码交给终端，不会移动 VIP；日志是 Keepalived 自己的调度 |
+| 日志里的 0 priority | `sent 0 priority` 是退出 MASTER 的通告，配置里的 150 没有被改成 0 |
+| 开机 | `systemctl enable` 只设置开机，不等于 `start`。11-19 enable 之后没有再重启 |
+
+检查脚本（root:root 755），返回码就是最后这条 curl 的返回码。0 成功，非 0 失败。退出码 2 是初始化失败；停掉 Nginx 时看到过 7，没有 curl 报错原文。
+
+```bash
+#!/bin/bash
+/usr/bin/curl --noproxy '*' -fsS \
+  --connect-timeout 1 --max-time 2 \
+  http://127.0.0.1:8088/ >/dev/null 2>&1
+```
+
+```text
+global_defs {
+    script_user keepalived_script
+    enable_script_security
+}
+vrrp_script chk_nginx {
+    script "/usr/local/bin/check-nginx-ha.sh"
+    interval 3
+    timeout 3
+    fall 2
+    rise 2
+    weight 0
+}
+```
+
+`track_script { chk_nginx }` 写在 VI_1 里。
+
+11-18 只口答了「没有健康检查时只停 Nginx 不会切走」，没有实测停 Nginx。11-19 已经实测停/启 node1 的 Nginx：VIP 自动让出，恢复后 node1 抢回。
+
+两课都还没做的是：11-18 的重启、断电、开机自启；11-19 `enable` 之后的再重启；断电、两台都坏、网络隔离、数据同步。

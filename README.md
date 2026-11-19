@@ -68,6 +68,8 @@
 | W7 | 11-16 | LNMP 第一课：PHP-FPM、Nginx FastCGI、权限与 SELinux 部署 WordPress，502 演练（B3-1） | [链接](labs/2026-11-16-lnmp-wordpress.md) |
 | W7 | 11-17 | Nginx HTTPS：openssl 自签证书、443 ssl、HTTP→HTTPS 301 跳转，SELinux 403 排障（B3-2） | [链接](labs/2026-11-17-nginx-https.md) |
 | W7 | 11-18 | Nginx access log：字段拆分与状态码汇总脚本 | [链接](labs/2026-11-18-nginx-access-log-summary.md) |
+| W7 | 11-18 | Keepalived：VRRP 浮动 IP（HA 基础，无健康检查） | [链接](labs/2026-11-18-keepalived-ha-vip.md) |
+| W7 | 11-19 | Keepalived：Nginx 健康检查、自动切换与恢复抢占 | [链接](labs/2026-11-19-keepalived-nginx-healthcheck.md) |
 
 ## 补缺口小课：RAID 与虚拟化
 
