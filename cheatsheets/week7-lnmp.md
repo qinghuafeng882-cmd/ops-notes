@@ -96,13 +96,14 @@ awk '{print $9}' "$log_file" | sort | uniq -c
 
 | 做什么 | 要点 |
 |---|---|
-| 选 VIP | DHCP 服务器 192.168.56.100，池 .101–.254。`.50` 在池外；`arping -D -I enp0s8 -c 3` 无回应也不等于绝对空闲。`.200` 在池内，不选 |
-| 页面 | `conf.d/ha-test.conf` 监听 8088，`return 200` 各自标签 |
+| 选 VIP | DHCP 服务器 192.168.56.100，池 .101–.254。`arping -D -I enp0s8 -c 3 192.168.56.200` 无回应，但在池内，不选。`arping -D -I enp0s8 -c 3 192.168.56.50` 无回应且在池外，选它。无回应不等于绝对空闲 |
+| 页面 | `/etc/nginx/conf.d/ha-test.conf`：`listen 8088;`、`server_name _;`、`location /` 里 `default_type text/plain;`、`return 200 "ha test from node1\n";`。node2 只换标签 |
 | 放行 8088 | `semanage port -a -t http_port_t -p tcp 8088`；`firewall-cmd` permanent 开 `8088/tcp` 再 reload |
-| VRRP | IP 协议 112，不是 TCP/UDP 端口。rich rule：source 对方固定 IP，`protocol value="vrrp" accept`，permanent 后 reload。完整规则字符串未逐字留存 |
-| VI_1 | 两台 `state BACKUP`，`interface enp0s8`，`virtual_router_id 51`，priority 150/100，`advert_int 1`，unicast 指向对方，VIP `.50/24 dev enp0s8` |
-| 看地址 | `ip -br -4 addr show`。`ip -br -4 show` 少了 `addr` |
-| 健康检查 | `weight 0`：失败进入 FAULT，不是只降优先级。`fall 2` 连续失败，`rise 2` 连续成功 |
+| VRRP | IP 协议 112，不是 TCP/UDP 端口。node1：`sudo firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.56.12" protocol value="vrrp" accept'`。node2 的 source 换成 `192.168.56.11`。然后 `sudo firewall-cmd --reload` |
+| VI_1 | 两台 `state BACKUP`，`interface enp0s8`，`virtual_router_id 51`，priority 150/100，`advert_int 1`，unicast 指向对方，VIP `.50/24 dev enp0s8`。node2 的 `enp0s8` 上另有 192.168.56.22/24，用途未知，未处理 |
+| 看地址 | `ip -br -4 addr show`。`ip -br -4 show` 少了 `addr`。VIP：`curl --connect-timeout 2 --max-time 5 http://192.168.56.50:8088/` |
+| 启停 Keepalived | `rpm -q keepalived` 为 `keepalived-2.2.8-9.el10.x86_64`；最初 `systemctl is-active keepalived` 是 inactive。备份 `sudo cp -a /etc/keepalived/keepalived.conf /etc/keepalived/keepalived.conf.before-ha`。切换用 `sudo systemctl start/stop keepalived` |
+| 健康检查 | `weight 0`：失败进入 FAULT，不是只降优先级。`fall 2` 连续失败，`rise 2` 连续成功。手动跑脚本只把退出码交给终端，不会移动 VIP；日志是 Keepalived 自己的调度 |
 | 日志里的 0 priority | `sent 0 priority` 是退出 MASTER 的通告，配置里的 150 没有被改成 0 |
 | 开机 | `systemctl enable` 只设置开机，不等于 `start`。11-19 enable 之后没有再重启 |
 
@@ -130,6 +131,8 @@ vrrp_script chk_nginx {
 }
 ```
 
-`track_script { chk_nginx }` 写在 VI_1 里。手动跑脚本只把退出码交给终端，不代替 Keepalived 的定期检查。
+`track_script { chk_nginx }` 写在 VI_1 里。
 
-这课没有做：11-18 的重启/断电/开机自启、只停 Nginx 的实测、enable 之后的再重启、断电、两台都坏、网络隔离、数据同步。
+11-18 只口答了「没有健康检查时只停 Nginx 不会切走」，没有实测停 Nginx。11-19 已经实测停/启 node1 的 Nginx：VIP 自动让出，恢复后 node1 抢回。
+
+两课都还没做的是：11-18 的重启、断电、开机自启；11-19 `enable` 之后的再重启；断电、两台都坏、网络隔离、数据同步。

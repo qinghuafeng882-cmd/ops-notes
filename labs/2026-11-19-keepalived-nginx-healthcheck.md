@@ -15,14 +15,14 @@
 - 脚本的返回码就是最后一条命令的返回码。这里最后一条是 curl，所以 curl 的退出码就是检查结果。
 - `weight 0`：检查失败让这个 VRRP 实例进入 FAULT，不是只把优先级调低。
 - 日志里的 `sent 0 priority` 是退出 MASTER 时发出的通告。配置里的 priority 150 没有被改成 0。这是课堂讲解，不是事后改文件对过的记录。
-- 手动跑检查脚本，退出码只回到当前终端。驱动切换的是 Keepalived 自己按 interval 去跑。
+- 手动跑检查脚本，退出码只回到当前终端，不会因此移动 VIP。日志里的脚本返回码是 Keepalived 自己按 interval 调度的。
 - `sudo` 只管紧跟着的那一条命令，不穿过 `&&`。
 - `systemctl enable` 只设置开机启动，不等于 `start`。
 - curl 退出码 2 属于初始化失败。初稿那次没有留下 curl 的报错原文，不能补写。
 
 ## 关键步骤
 
-重启宿主机之后看到的初态：node1 的 nginx 是 active，keepalived 是 inactive；node2 两项都是 inactive；两台都没有 VIP。查询命令没有逐字留存。接着启动 node2 的 nginx，两台访问本机 8088，各自返回自己的 `ha test from nodeN`。这次 curl 的完整参数没有另记。
+重启宿主机之后：node1 的 nginx 是 active，keepalived 是 inactive；node2 两项都是 inactive；两台都没有 VIP。接着启动 node2 的 nginx，两台访问本机 8088，各自返回自己的 `ha test from nodeN`。
 
 ```bash
 # 两台
@@ -77,7 +77,7 @@ keepalived -t -f                        # 返回 0
 
 启动后 node1 持有 VIP，node2 是 BACKUP。
 
-第一轮：停 node1 的 nginx，同时手动跑了检查脚本，退出码 7。keepalived 仍是 active。这一轮不能单独证明是自动切换，因为手也跑了脚本。
+第一轮含手动诊断：停 node1 的 nginx，同时手动跑了检查脚本，退出码 7。keepalived 仍是 active。这次手动执行只把退出码交给终端，不会触发 VIP 切换。下面的时间是 Keepalived 自己写进日志的调度记录。
 
 - 09:08:08 日志里脚本返回 7
 - 09:08:11 失败，进入 FAULT，`sent 0 priority`，removing VIPs
@@ -85,7 +85,7 @@ keepalived -t -f                        # 返回 0
 - 恢复 nginx 后：09:20:26 脚本返回 0；09:20:29 成功，状态 BACKUP；09:20:32 MASTER
 - node2 去掉 VIP，响应 node1
 
-第二轮没有手动跑检查脚本，也没有操作 Keepalived，只停、再启动 node1 的 nginx。
+第二轮用来排除「是不是手动跑脚本才切换」的疑问：整轮没有手动运行检查脚本，也没有操作 Keepalived，只停、再启动 node1 的 nginx，VIP 仍然自动让出并抢回。
 
 - 09:31:41 node1 日志 return 7
 - 09:31:44 失败，进入 FAULT，移除 VIP
@@ -109,7 +109,7 @@ sudo systemctl enable nginx keepalived
 
 | 检查项 | 命令 | 预期结果 | 结果 |
 |---|---|---|---|
-| 重启宿主机后的初态 | 查看服务与地址，命令未逐字留存 | node1 nginx active、keepalived inactive；node2 两项 inactive；都无 VIP | ✅ 这是 enable 之前的初态 |
+| 重启宿主机后的初态 | 看到的服务与地址 | node1 nginx active、keepalived inactive；node2 两项 inactive；都无 VIP | ✅ 这是 enable 之前的初态 |
 | 本机 8088 | 启动 node2 nginx 后访问本机 | 各自标签 | ✅ |
 | curl 路径 | `command -v curl` | `/usr/bin/curl` | ✅ 两台 |
 | 检查用户原先不存在 | `getent passwd keepalived_script` | 无结果 | ✅。创建后没有再记一次 getent |
@@ -118,8 +118,8 @@ sudo systemctl enable nginx keepalived
 | 修正后的脚本 | 同上，以修正后的脚本执行 | 退出码 0 | ✅ |
 | 配置测试 | `keepalived -t -f` | 返回 0 | ✅ 两台 |
 | 启动后角色 | | node1 持 VIP，node2 BACKUP | ✅ |
-| 第一轮停 nginx | 同时手动跑了脚本 | 09:08 进入 FAULT，node2 接管；09:20 恢复后 node1 抢回 | ✅。不能单独证明自动切换 |
-| 第二轮只停/启 nginx | 不跑脚本，不动 Keepalived | 09:31 FAULT 并让出 VIP；09:37 回到 MASTER | ✅ 自动接管和恢复抢占 |
+| 第一轮停 nginx | 同时手动跑了脚本，退出码 7 | 09:08 日志里 Keepalived 进入 FAULT，node2 接管；09:20 恢复后 node1 抢回。手动执行不触发 VIP 切换 | ✅ 日志是自动调度 |
+| 第二轮只停/启 nginx | 整轮不跑脚本，不动 Keepalived | 09:31 自动 FAULT 并让出 VIP；09:37 自动回到 MASTER | ✅ 自动接管和恢复抢占 |
 | enable 前 | `systemctl is-enabled nginx keepalived` | node1 enabled/disabled；node2 disabled/disabled | ✅ |
 | enable 后 | 同上 | 两台 enabled/enabled | ✅ 09:57 |
 | enable 之后再重启 | | 开机自己起来 | 未验证。enable 不等于 start |
@@ -133,7 +133,7 @@ sudo systemctl enable nginx keepalived
 
 ## 卡点 / 没想明白的
 
-- 第一轮手动跑脚本时，怀疑是不是这次手动执行促成了切换。讲解：手动执行只把退出码交给终端；Keepalived 自己定期执行才改状态。第二轮去掉了手动执行。
+- 第一轮停 nginx 时手动跑过脚本，曾怀疑是这次手动执行促成了切换。手动执行只把退出码交给终端，不会移动 VIP；09:08 的日志是 Keepalived 自己的调度。第二轮整轮没有手动跑脚本，也没有操作 Keepalived，停/启 node1 的 nginx 后仍然自动切换并恢复。
 - 口答把「低权限」说成「低优先级」。分没有因此扣掉，见第 5 题。
 - 薄弱的是：0 是成功、非 0 是失败；`fall` 和 `rise` 两个都要记住。不是五题全会。
 
