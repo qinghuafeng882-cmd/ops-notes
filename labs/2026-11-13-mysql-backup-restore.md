@@ -132,4 +132,4 @@ binlog.000003 中 793 → 1330 的事件：
 
 - [x] D+1（11-14，5/5，decode-rows -v 与重放区别、管道、> 由 bash 先处理及 --stop-position 均已掌握）
 - [x] D+3（11-16，4.5/5；`--base64-output=decode-rows -v` 误写成 recode，只用于看，重放时不能加）
-- [ ] D+7
+- [x] D+7（11-20，1/1（合并复习，三篇合计 5/5，不是本篇单独 5 题）；`mysqlbinlog` 重放不能加 `--base64-output=decode-rows -v`。ROW 事件解出来的注释不会被重放）

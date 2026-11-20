@@ -105,7 +105,7 @@ awk '{print $9}' "$log_file" | sort | uniq -c
 | 启停 Keepalived | `rpm -q keepalived` 为 `keepalived-2.2.8-9.el10.x86_64`；最初 `systemctl is-active keepalived` 是 inactive。备份 `sudo cp -a /etc/keepalived/keepalived.conf /etc/keepalived/keepalived.conf.before-ha`。切换用 `sudo systemctl start/stop keepalived` |
 | 健康检查 | `weight 0`：失败进入 FAULT，不是只降优先级。`fall 2` 连续失败，`rise 2` 连续成功。手动跑脚本只把退出码交给终端，不会移动 VIP；日志是 Keepalived 自己的调度 |
 | 日志里的 0 priority | `sent 0 priority` 是退出 MASTER 的通告，配置里的 150 没有被改成 0 |
-| 开机 | `systemctl enable` 只设置开机，不等于 `start`。11-19 enable 之后没有再重启 |
+| 开机 | `systemctl enable` 只设置开机，不等于 `start`。11-19 当天 enable 之后没有再重启。11-20 做了正常 reboot：两台都没有手动 start，nginx 与 keepalived 自己 active；node1 起来后 `enp0s8` 有 .11 和 .50。截图 08:23:15–18 是 node2，08:23:19 起是 node1。不是断电，也不能写成零丢失或精确中断时刻 |
 
 检查脚本（root:root 755），返回码就是最后这条 curl 的返回码。0 成功，非 0 失败。退出码 2 是初始化失败；停掉 Nginx 时看到过 7，没有 curl 报错原文。
 
@@ -133,6 +133,19 @@ vrrp_script chk_nginx {
 
 `track_script { chk_nginx }` 写在 VI_1 里。
 
-11-18 只口答了「没有健康检查时只停 Nginx 不会切走」，没有实测停 Nginx。11-19 已经实测停/启 node1 的 Nginx：VIP 自动让出，恢复后 node1 抢回。
+11-18 只口答了「没有健康检查时只停 Nginx 不会切走」，没有实测停 Nginx。11-19 已经实测停/启 node1 的 Nginx：VIP 自动让出，恢复后 node1 抢回。11-19 当天没有再重启。
 
-两课都还没做的是：11-18 的重启、断电、开机自启；11-19 `enable` 之后的再重启；断电、两台都坏、网络隔离、数据同步。
+11-20 正常 reboot 已测，见 `labs/2026-11-20-ha-reboot-rhcsa-mock2.md`。仍未做：突然断电、两台同时故障、网络隔离、数据同步。`before-rhcsa2` 是两台各自的开机快照，不是同一时刻的一致性快照，也不是数据库备份。
+
+## 11-20 模拟②分段与 ACL
+
+| 做什么 | 要点 |
+|---|---|
+| SGID | `chmod 2770`。新建文件属组跟目录。770 再改 2770 时，前一次可以不写 |
+| 精确 location | `location = /exam-health`。`/exam-health-extra` 不走这条。改前要先备份；`nginx -t` 失败不一定只是语法 |
+| 状态码个数 | `sort \| uniq -c` 前先排序。数字倒序是 `sort -nr`，`sort -r` 是文字序。`sudo` 只管 awk |
+| 本次启动 | `sudo journalctl -b -u nginx -n 10 --no-pager`。`-n 10` 是最多 10 条 |
+| 监听与防火墙 | `sudo ss -lntp 'sport = :8088'` 看到 `0.0.0.0:8088` 不等于防火墙已放行。活动 zone 是 `--get-active-zones`，不是 `--active-zone` |
+| ACL | `sudo setfacl -m u:exam02:rx /srv/ops-exam`。有效权限是条目和 mask 的交集。`-x` 删条目。默认 ACL 没讲 |
+
+`firewall-cmd --reload` 和 `--query-port=8088/tcp` 在 11-20 只分别是口答和举例，没有执行。`--list-ports` 里当时有 `8088/tcp`。

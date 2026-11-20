@@ -122,7 +122,7 @@ sudo systemctl enable nginx keepalived
 | 第二轮只停/启 nginx | 整轮不跑脚本，不动 Keepalived | 09:31 自动 FAULT 并让出 VIP；09:37 自动回到 MASTER | ✅ 自动接管和恢复抢占 |
 | enable 前 | `systemctl is-enabled nginx keepalived` | node1 enabled/disabled；node2 disabled/disabled | ✅ |
 | enable 后 | 同上 | 两台 enabled/enabled | ✅ 09:57 |
-| enable 之后再重启 | | 开机自己起来 | 未验证。enable 不等于 start |
+| enable 之后再重启 | | 开机自己起来 | 未验证（11-19 当天）。enable 不等于 start。11-20 用正常 reboot 补验了开机自启和恢复抢占，见 [当天笔记](2026-11-20-ha-reboot-rhcsa-mock2.md)。突然断电仍未做 |
 | 断电、两台都坏、网络隔离、数据同步 | | | 未做 |
 
 ## 踩坑
@@ -175,8 +175,8 @@ sudo systemctl enable nginx keepalived
 
 ## 复习记录
 
-起算日是上课日 11-19。这三项都还没做。
+起算日是上课日 11-19。
 
-- [ ] D+1
+- [x] D+1（11-20，2/2（合并复习，三篇合计 5/5，不是本篇单独 5 题）；0 是成功，非 0 是失败；`fall 2` 连续失败 2 次，`rise 2` 连续成功 2 次才判恢复）
 - [ ] D+3
 - [ ] D+7
