@@ -110,7 +110,7 @@ curl --connect-timeout 2 --max-time 5 http://192.168.56.50:8088/
 | 停 node1 Keepalived | `sudo systemctl stop keepalived`，再 curl 同一个 VIP | 转到 node2，正文是 node2 | ✅ |
 | 再启动 node1 Keepalived | `sudo systemctl start keepalived`，再 curl 同一个 VIP | 抢回 VIP，正文是 node1 | ✅ |
 | 只停 Nginx | | 不会切走 | 口答。当天未实测 |
-| 重启、断电、开机自启 | | | 未验证 |
+| 重启、断电、开机自启 | | | 未验证（11-18 当天）。11-20 另测了正常 reboot，见 [当天笔记](2026-11-20-ha-reboot-rhcsa-mock2.md)。断电仍未做 |
 
 ## 踩坑
 
