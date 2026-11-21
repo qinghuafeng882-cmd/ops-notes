@@ -2,7 +2,7 @@
 
 - 日期：2026-11-21（北京时间 09:00 开课，10:04 课后 5 题做完）
 - 考点：RHCSA EX200 —— 默认 ACL。访问 ACL 和 mask 沿用 [11-20](2026-11-20-acl-basics.md)
-- 环境：Rocky Linux 10（VirtualBox）。目录仍是 `/srv/ops-exam`。这节没有另写主机名
+- 环境：Rocky Linux 10.2（VirtualBox），node1，用户 fqh，目录 `/srv/ops-exam`
 - 状态：短课做完。模拟②仍不是完整闭卷。简历、JD、投递未做
 - 来源：课堂终端记录。归档时没有重跑
 
