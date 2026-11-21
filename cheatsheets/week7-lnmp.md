@@ -163,3 +163,19 @@ vrrp_script chk_nginx {
 - 没做：`cd` 进新目录、验证写被拒绝、删除默认规则、`chmod`、重启后还在不在。
 
 `uniq` 是合并统计相邻相同行，不是排序。复制字段是 `Last_IO_Error`，不是 `Last_IO_Errors`。
+
+## 11-21 只读诊断与 find
+
+只读诊断没有注入故障，也没有独立 5 题。当前 VIP 能打开，不是切换验证。
+
+| 做什么 | 要点 |
+|---|---|
+| 本机 | `curl --noproxy '*' -i --connect-timeout 1 --max-time 2 http://127.0.0.1:8088/exam-health`。漏掉 `'*'` 时，后面的 `-i` 会被 `--noproxy` 吃掉 |
+| 顺序 | 本机只证所测地址。再测跨主机固定 IP，然后 VIP。固定 IP 正常、VIP 异常，查 VIP 在哪一台和 keepalived |
+| 端口查询 | 11-21 node1：`--zone=public --query-port=8088/tcp` 与 `--permanent` 都是 yes。没有 reload。query 为 no 也不等于一定不可达 |
+| rich rule | 现有一条只放行 192.168.56.12 的 VRRP（协议 112），不代替 TCP 8088 |
+| 地址 | node1：.11/24 与 .50/24 secondary。node2：.12/24 与 .22/24 secondary。`.22` 用途未知。不是双主 |
+| find | `-type`、`-user` 不能写成 `-t`、`-u`。`-name '*.txt'` 要引号，只比文件名。多条件默认同时满足 |
+| find 退出码 | `sudo find /srv/ops-exam -type f -name '*.txt' -user exam01 -size +1M` 无输出，`$?` 为 0。没造过大文件，不能写成有命中 |
+
+没做：故障注入、`-delete`、`-exec`、mtime、复制、移动。模拟②仍不是完整闭卷。

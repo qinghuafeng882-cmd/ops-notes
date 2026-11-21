@@ -73,6 +73,8 @@
 | W7 | 11-20 | HA 正常重启验证，RHCSA 模拟②分段（用户组/SGID、Nginx location、日志、journal、防火墙） | [链接](labs/2026-11-20-ha-reboot-rhcsa-mock2.md) |
 | W7 | 11-20 | ACL 基础：setfacl、mask、有效权限（模拟题撤出闭卷） | [链接](labs/2026-11-20-acl-basics.md) |
 | W7 | 11-21 | 默认 ACL：只套到新建的文件和目录 | [链接](labs/2026-11-21-acl-default.md) |
+| W7 | 11-21 | 只读诊断：本机、固定 IP、VIP 与 keepalived 的正常状态 | [链接](labs/2026-11-21-readonly-diagnose-ha.md) |
+| W7 | 11-21 | find：-type、-user、-name，无匹配时退出码仍可为 0 | [链接](labs/2026-11-21-find-type-user-name.md) |
 
 ## 补缺口小课：RAID 与虚拟化
 
