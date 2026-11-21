@@ -14,10 +14,10 @@
 
 - 本机有响应，只能说明这个地址上有服务。它可能只听 127.0.0.1。不能因此说整台 nginx 没问题，也不能说服务没启动。
 - 听在 `0.0.0.0:8088` 表示所有 IPv4 地址。对方可以用固定 IP 来连，这仍不等于防火墙已经放行。
-- `firewall-cmd --query-port` 只查直接写上的端口规则。结果是 no，也不等于一定连不上：rich rule 可以放行，服务定义里也可以带这个端口。
+- 教师问：`--query-port` 为 no，是不是就一定不可达。用户答 rich rule 仍可放行，这是对的。补了一句：服务定义里也可以带这个端口。query 只查直接写上的端口规则。
 - 今天 runtime 和 permanent 的 8088/tcp 都是 yes，这条规则两边一致，不需要为它 reload。reload 没有执行。
-- 现有 rich rule 只放行来自 192.168.56.12 的 IPv4 VRRP（IP 协议 112）。它不代替 TCP 8088。
-- 固定 IP 正常、VIP 异常时，先看 VIP 在哪一台，再看 keepalived。两台都没有 VIP，才去查 keepalived 是否在跑。
+- 现有 rich rule 只放行来自 192.168.56.12 的 IPv4 VRRP（IP 协议 112）。教师说明它不代替 TCP 8088。用户能解释，回答正确。
+- 固定 IP 正常、VIP 异常时，先看 VIP 在哪一台，再看 keepalived。两台都没有 VIP，去查 keepalived 是否在跑。
 - node2 的 `enp0s8` 上还有 192.168.56.22/24，标成 secondary。用途未知，没有动。两台各有一个 secondary 地址，不是双主。
 - 当前 node1 是 MASTER 并持有 .50，node2 是 BACKUP、没有 VIP。这是这次看到的正常状态。角色可以换，不是永久固定。
 - 这次固定 IP 和 VIP 都能访问，只说明当前通。不是故障切换验证。
@@ -27,7 +27,7 @@
 ## 关键步骤
 
 ```bash
-# 10:06 node1
+# 10:10 node1。任务 10:06 下发，输出是这时贴的
 systemctl is-active nginx
 sudo ss -lntp 'sport = :8088'
 curl --noproxy '*' -i --connect-timeout 1 --max-time 2 http://127.0.0.1:8088/exam-health
@@ -96,8 +96,6 @@ node1 的 `enp0s8`：192.168.56.11/24，以及 192.168.56.50/24 secondary，接�
 
 - 人还在 node1，命令写成 `curl --noproxy -i ...` → 漏了 `'*'`，`-i` 被当成 `--noproxy` 的参数，只剩正文，而且不是跨主机 → 换到 node2，补上 `'*'`，`-i` 才是 curl 自己的选项。
 - 本机 200 就说「nginx 没问题」→ 本机响应只证所测的那个地址，服务可能只听 127.0.0.1 → 用 `sudo ss -lntp 'sport = :8088'` 看实际监听。口答这条命令是对的。
-- 把 query 想成「no 就一定不可达」→ query 只查直接端口规则 → rich rule 可以放行，服务定义里也可以包含该端口。
-- 把现有 rich rule 当成 8088 的放行 → 它只允许 192.168.56.12 的 VRRP（协议 112）→ 不代替 TCP 8088。用户能说明这一点。
 - 综合时先看了服务、端口、本机，然后说「多半网络或客户端」→ 还没做跨主机对照就归因 → 改为先跨主机固定 IP，再 VIP。固定 IP 正常、VIP 异常，查 VIP 归属和 keepalived。
 - 说分开测是为了排除 keepalived → 缩小范围不等于直接诊断 → 先按上面的顺序取证，再决定查不查 keepalived。
 
