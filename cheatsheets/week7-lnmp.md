@@ -146,6 +146,20 @@ vrrp_script chk_nginx {
 | 状态码个数 | `sort \| uniq -c` 前先排序。数字倒序是 `sort -nr`，`sort -r` 是文字序。`sudo` 只管 awk |
 | 本次启动 | `sudo journalctl -b -u nginx -n 10 --no-pager`。`-n 10` 是最多 10 条 |
 | 监听与防火墙 | `sudo ss -lntp 'sport = :8088'` 看到 `0.0.0.0:8088` 不等于防火墙已放行。活动 zone 是 `--get-active-zones`，不是 `--active-zone` |
-| ACL | `sudo setfacl -m u:exam02:rx /srv/ops-exam`。有效权限是条目和 mask 的交集。`-x` 删条目。默认 ACL 没讲 |
+| ACL | `sudo setfacl -m u:exam02:rx /srv/ops-exam`。有效权限是条目和 mask 的交集。`-x` 删条目。11-20 没讲默认 ACL |
 
 `firewall-cmd --reload` 和 `--query-port=8088/tcp` 在 11-20 只分别是口答和举例，没有执行。`--list-ports` 里当时有 `8088/tcp`。
+
+## 11-21 默认 ACL
+
+`sudo setfacl -m d:u:exam02:rx /srv/ops-exam`。漏 `-m` 会 `Usage`。
+
+- 只影响之后新建的对象，不改已有的。它是创建时的模板，不是事后持续同步。11-21 没有拿旧文件做前后对照。
+- 新建目录同时有访问 ACL 和 `default:` 条目。新建的普通文件只有访问 ACL。
+- SGID 管新建对象的属组。默认 ACL 管新建对象的 ACL 条目。
+- 这次 `touch` 出来的文件 mask 是 `rw-`（请求的 mode 通常是 0666，不含 x）。exam02 的 `r-x` 有效是 `r--`。不要写成默认 ACL 会给普通文件执行权。
+- `mkdir` 请求 x，这次新目录的 mask 是 `rwx`。
+- fqh 没有目录穿越权时，`getfacl` 是 `Permission denied`，用 `sudo getfacl`。
+- 没做：`cd` 进新目录、验证写被拒绝、删除默认规则、`chmod`、重启后还在不在。
+
+`uniq` 是合并统计相邻相同行，不是排序。复制字段是 `Last_IO_Error`，不是 `Last_IO_Errors`。

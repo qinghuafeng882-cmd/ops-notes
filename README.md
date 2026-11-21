@@ -72,6 +72,7 @@
 | W7 | 11-19 | Keepalived：Nginx 健康检查、自动切换与恢复抢占 | [链接](labs/2026-11-19-keepalived-nginx-healthcheck.md) |
 | W7 | 11-20 | HA 正常重启验证，RHCSA 模拟②分段（用户组/SGID、Nginx location、日志、journal、防火墙） | [链接](labs/2026-11-20-ha-reboot-rhcsa-mock2.md) |
 | W7 | 11-20 | ACL 基础：setfacl、mask、有效权限（模拟题撤出闭卷） | [链接](labs/2026-11-20-acl-basics.md) |
+| W7 | 11-21 | 默认 ACL：只套到新建的文件和目录 | [链接](labs/2026-11-21-acl-default.md) |
 
 ## 补缺口小课：RAID 与虚拟化
 
