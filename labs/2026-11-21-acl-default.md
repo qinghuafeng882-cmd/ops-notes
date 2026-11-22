@@ -127,8 +127,8 @@ sudo -u exam01 touch /srv/ops-exam/default-dir01/nested-file01.txt
 
 ## 复习记录
 
-起算日是 11-21。这三项都还没做。
+起算日是 11-21。
 
-- [ ] D+1
+- [x] D+1（11-22，1/1（合并复习，五题合计 4.5/5，不是本篇单独 5 题）；`setfacl -m d:u:exam02:rx /srv/ops-exam`）
 - [ ] D+3
 - [ ] D+7

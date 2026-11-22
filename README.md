@@ -75,6 +75,7 @@
 | W7 | 11-21 | 默认 ACL：只套到新建的文件和目录 | [链接](labs/2026-11-21-acl-default.md) |
 | W7 | 11-21 | 只读诊断：本机、固定 IP、VIP 与 keepalived 的正常状态 | [链接](labs/2026-11-21-readonly-diagnose-ha.md) |
 | W7 | 11-21 | find：-type、-user、-name，无匹配时退出码仍可为 0 | [链接](labs/2026-11-21-find-type-user-name.md) |
+| W9 | 11-22 | Prometheus 首课：node1 本地 Prometheus 与 node_exporter（Grafana 未开始） | [链接](labs/2026-11-22-prometheus-node-exporter.md) |
 
 ## 补缺口小课：RAID 与虚拟化
 
@@ -85,7 +86,7 @@ RHCSA 大纲不覆盖、但运维面试常问的两块，课外单独学习，�
 | 10-22 | mdadm 搭建 RAID 5 + 热备盘，模拟坏盘、自动重建、换盘 | [链接](labs/2026-10-22-raid5-mdadm-hotspare.md) |
 | 11-04 | KVM/libvirt：嵌套虚拟化失败排查（Hyper-V 独占 AMD-V）与 TCG 方案 | [链接](labs/2026-11-04-kvm-libvirt-tcg.md) |
 
-速查表：[W1 命令行与文本处理](cheatsheets/week1-cli-text.md) · [W2 系统管理](cheatsheets/week2-sysadmin.md) · [W3 存储](cheatsheets/week3-storage.md) · [W4 网络与安全](cheatsheets/week4-network-security.md) · [W5 脚本与计划任务](cheatsheets/week5-scripts-scheduling.md) · [W6 Nginx](cheatsheets/week6-nginx.md) · [W6 MySQL](cheatsheets/week6-mysql.md) · [W7 LNMP](cheatsheets/week7-lnmp.md)
+速查表：[W1 命令行与文本处理](cheatsheets/week1-cli-text.md) · [W2 系统管理](cheatsheets/week2-sysadmin.md) · [W3 存储](cheatsheets/week3-storage.md) · [W4 网络与安全](cheatsheets/week4-network-security.md) · [W5 脚本与计划任务](cheatsheets/week5-scripts-scheduling.md) · [W6 Nginx](cheatsheets/week6-nginx.md) · [W6 MySQL](cheatsheets/week6-mysql.md) · [W7 LNMP](cheatsheets/week7-lnmp.md) · [W9 Prometheus](cheatsheets/week9-prometheus.md)
 
 ## 日常用法
 

@@ -211,4 +211,4 @@ mysql -u root -p labdb -e "SET sql_log_bin = 0; DELETE FROM t_order WHERE id = 9
 
 - [x] D+1（11-16，3.5/5；`Using index` 误答为「用上了索引」，实为覆盖索引、无需回表，是否用索引看 `key` 列；GTID 跳过事务命令没记全：`SET GTID_NEXT='UUID:N'; BEGIN; COMMIT; SET GTID_NEXT='AUTOMATIC';`，是会话变量，不是 `SET GLOBAL`）
 - [x] D+3（11-18，1/1（合并复习，三篇合计 3.5/5，不是本篇单独 5 题）；只抽了 `Using index`：覆盖索引、不回表。GTID 跳过事务未测，不得称掌握）
-- [ ] D+7
+- [x] D+7（11-22，0.5/1（合并复习，五题合计 4.5/5，不是本篇单独 5 题）；写成 `PROCESSLIST -f`。订正为 `SHOW FULL PROCESSLIST;`，含分号。不改首答）
