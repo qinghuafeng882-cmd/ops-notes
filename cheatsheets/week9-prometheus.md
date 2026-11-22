@@ -1,6 +1,6 @@
 # W9 速查：Prometheus 与 Grafana（11-22）
 
-Prometheus 只在 node1 本机。Alertmanager、告警规则、从别的机器访问 Prometheus 的 9090，都还没做。Grafana 基础见下面一节。整个监控模块没有做完。
+Prometheus 只在 node1 本机采集。11-23 写过告警规则，并用 Windows 打开过 `http://192.168.56.11:9090/alerts`。没有装 Alertmanager，没有验证通知。整个监控模块没有做完。
 
 | 做什么 | 命令 / 事实 |
 |---|---|
@@ -32,3 +32,12 @@ Prometheus 只在 node1 本机。Alertmanager、告警规则、从别的机器�
 | 面板 | `node_memory_MemAvailable_bytes{job="node"}`。单位 bytes(IEC) 只改显示。Apply 是面板，Save 是整个 dashboard |
 
 管理员密码不入库，记 `...`。没有证明首次登录后改过密码。没有关防火墙或 SELinux，没有 `audit2allow`，没有重启验证。
+
+## 告警规则（11-23）
+
+`/etc/prometheus/node_alerts.yml`：`NodeExporterDown`，`up{job="node"} == 0`，`for: 1m`，标签 `severity: warning`。`rule_files` 写绝对路径，不会自动扫全部文件。
+
+- `for` 是持续成立的时间，不是采集周期，也不是 `evaluation_interval` 15s。中途恢复要重新计时。短暂失败把 Pending 清掉，只讲了，没做。
+- `up == 0` 只是最近一次采集失败，不是整机宕机。Firing 不是通知已送达。`localhost:9093` 仍只是预设地址。
+- 停/启 `prometheus-node-exporter` 的终端输出没贴。页面截图：07:06 Inactive，07:09 Pending（19.282s，value 0），07:11 Firing（1m50.299s，value 0），07:14 Inactive。截图时长不是精确触发延迟。
+- `systemctl status -l` 是 `--full`。`--no-pager` 不进分页器。没有做系统重启验证。

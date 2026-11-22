@@ -156,5 +156,5 @@ sudo setfacl -x u:exam02 /srv/ops-exam
 起算日是 11-20。
 
 - [x] D+1（11-21，2/2（合并复习，六题合计 5.5/6，折合 4.58/5，不是 5/5，也不是本篇单独 5 题）；`sudo setfacl -m u:exam02:rx /srv/ops-exam` 1 分；`r-x` 与 mask `r--` 的有效权限是 `r--` 1 分）
-- [ ] D+3
+- [x] D+3（11-23，1/1（合并复习，五题合计 5/5，不是本篇单独 5 题）；`sudo setfacl -m u:exam02:rx /srv/ops-exam`）
 - [ ] D+7
