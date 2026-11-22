@@ -12,7 +12,7 @@
 
 ## 关键概念
 
-- 包名 `grafana` 已经是完整名字。`10.2.6-28.el10_2.9` 这种 version-release.arch 是在标识这个包的其余部分，不是「用前缀匹配所以装了三个」。
+- 包名 `grafana` 已经是完整名字。完整标识 `grafana-10.2.6-28.el10_2.9.x86_64` 拆开是 name `grafana`、version `10.2.6`、release `28.el10_2.9`、arch `x86_64`。不是「用前缀匹配所以装了三个」。
 - 依赖 `grafana-selinux` 会装上。`grafana-pcp` 是弱依赖，默认也会装。第一次安装可以加 `--setopt=install_weak_deps=False`。这节只讲了，没有执行，也没有卸载。
 - 单元里的 `After=` 数据库单元，不表示那些数据库已经安装或正在跑。安全加固项留着，没有改 vendor 单元。
 - 只有真正被读到的环境变量才起作用。`User=` 和 `LimitNOFILE=` 是单元里直接写的，不能只改一个同名环境变量就当成已经生效。
@@ -39,7 +39,7 @@ rpm -qc grafana
 
 `rpm -qc`：`/etc/grafana/grafana.ini`、`/etc/grafana/ldap.toml`、`/etc/sysconfig/grafana-server`。
 
-`systemctl cat grafana-server.service`：`EnvironmentFile=/etc/sysconfig/grafana-server`，`User`/`Group`=`grafana`，`Type=notify`，`Restart=on-failure`，`WorkingDirectory=/usr/share/grafana`，`LimitNOFILE=10000`。`ExecStart=/usr/sbin/grafana server --config=${CONF_FILE} --pidfile=${PID_FILE_DIR}/grafana-server.pid --packaging=rpm`，并带上 `cfg:default.paths.logs=${LOG_DIR}`、`data=${DATA_DIR}`、`plugins=${PLUGINS_DIR}`、`provisioning=${PROVISIONING_CFG_DIR}`。
+`systemctl cat grafana-server.service`：`EnvironmentFile=/etc/sysconfig/grafana-server`，`User`/`Group`=`grafana`，`Type=notify`，`Restart=on-failure`，`WorkingDirectory=/usr/share/grafana`，`LimitNOFILE=10000`。`ExecStart=/usr/sbin/grafana server --config=${CONF_FILE} --pidfile=${PID_FILE_DIR}/grafana-server.pid --packaging=rpm cfg:default.paths.logs=${LOG_DIR} cfg:default.paths.data=${DATA_DIR} cfg:default.paths.plugins=${PLUGINS_DIR} cfg:default.paths.provisioning=${PROVISIONING_CFG_DIR}`。
 
 `/etc/sysconfig/grafana-server` 里实际是：`GRAFANA_USER`/`GRAFANA_GROUP`=`grafana`，`GRAFANA_HOME=/usr/share/grafana`，`LOG_DIR=/var/log/grafana`，`DATA_DIR=/var/lib/grafana`，`MAX_OPEN_FILES=10000`，`CONF_DIR=/etc/grafana`，`CONF_FILE=/etc/grafana/grafana.ini`，`RESTART_ON_UPGRADE=true`，`PLUGINS_DIR=/var/lib/grafana/plugins`，`PROVISIONING_CFG_DIR=/etc/grafana/provisioning`，`PID_FILE_DIR=/var/run/grafana`。
 
@@ -57,7 +57,7 @@ sudo ss -lntp 'sport = :3000'
 curl -sS -o /dev/null -w '%{http_code}\n' http://localhost:3000/login
 ```
 
-第一次 `ss` 只有表头。`enable --now` 在 `/etc/systemd/system/multi-user.target.wants/grafana-server.service` 建了软链，指向 `/usr/lib/systemd/system/grafana-server.service`。`is-active` 是 active。再 `ss`：`LISTEN 0 4096 *:3000`，用户 `grafana`，pid 93958，fd 13。本机登录页状态码 200。`-o` 丢掉正文，`-w` 只留下状态码。
+第一次 `ss` 只有表头。`enable --now` 在 `/etc/systemd/system/multi-user.target.wants/grafana-server.service` 建了软链，指向 `/usr/lib/systemd/system/grafana-server.service`。`is-active` 是 active。再 `ss`：`LISTEN 0 4096 *:3000`，`users` 里的进程名是 `grafana`，pid 93958，fd 13。跑这个进程的用户来自单元里的 `User=grafana`，不是 `ss` 这一列证明的。本机登录页状态码 200。`-o` 丢掉正文，`-w` 只留下状态码。
 
 Windows 打开 `http://192.168.56.11:3000/login`，截图是 `ERR_CONNECTION_TIMED_OUT`。
 
@@ -95,7 +95,7 @@ getsebool -a | grep grafana
 
 11:07:05 有四条，时间 `.138`、`.150`、`.150`、`.170`，seq 486–489。syscall `connect`，`success=no`，exit `EACCES`。`comm=grafana`，pid 93958，subj `grafana_t`。AVC：`denied { name_connect }`，dest 9090，`scontext=system_u:system_r:grafana_t:s0`，`tcontext=system_u:object_r:websm_port_t:s0`，`tclass=tcp_socket`，permissive 0。
 
-`getsebool -a | grep grafana` 里这些是 off：`can_reverse_proxy`，以及 `can_tcp_connect_` 后面的 elasticsearch_port、ldap_port、mysql_port、postgresql_port、prometheus_port。只打开专用的 `grafana_can_tcp_connect_prometheus_port`。先临时执行 `sudo setsebool grafana_can_tcp_connect_prometheus_port on`，这条的终端输出没有贴出；随后截图是 Successfully queried the Prometheus API。
+`getsebool -a | grep grafana` 里这六项都是 off：`grafana_can_reverse_proxy`、`grafana_can_tcp_connect_elasticsearch_port`、`grafana_can_tcp_connect_ldap_port`、`grafana_can_tcp_connect_mysql_port`、`grafana_can_tcp_connect_postgresql_port`、`grafana_can_tcp_connect_prometheus_port`。只打开最后这一项。先临时执行 `sudo setsebool grafana_can_tcp_connect_prometheus_port on`，这条的终端输出没有贴出；随后截图是 Successfully queried the Prometheus API。
 
 持久化时先写成 `connnect`（三个 n），报 Boolean 未定义。改正后：
 
