@@ -33,7 +33,7 @@
 - 配置里写着 `localhost:9093`，不等于已经装了 Alertmanager。
 - `up{job="node"}` 为 1，只表示最近这一次采集成功，不是业务整体健康。
 - 直接读 `9100/metrics` 是 exporter 当时的输出。查 `9090` 是已经采集并存下来的数据。两个数可以不一样。
-- 查询结果里的 unix 时间戳按原样保留，不换算。不要把 `value` 里的时间说成一定是源样本的采集时刻。
+- 即时查询里，`value` 的第一项是这次查询的求值时间戳，不一定是原始样本的采集时间。数值本身按输出原样留着。
 - `curl --get` 把 `--data-urlencode` 放到查询串里。不加 `--get` 时，`--data-urlencode` 默认是 POST。
 - `-w` / `--write-out` 在响应之后按格式再输出。这里用 `-w '\n'` 补一个换行。提示符粘在 JSON 末尾，是因为没有换行，不是请求没结束。
 - `status success` 且 `result` 为 `[]`：查询本身成功，只是没有匹配的序列。不是数值 0，也不是监控挂了。
@@ -61,11 +61,15 @@ systemctl is-active prometheus-node-exporter.service prometheus.service
 - `/etc/default/prometheus-node-exporter`
 - `/etc/logrotate.d/prometheus-node-exporter`
 
-`rpm -ql` 里带 `.service` 的是：`/usr/lib/systemd/system/node_exporter.service`、`prometheus-node-exporter.service`、`/usr/share/doc/node-exporter/examples/systemd/node_exporter.service`。中间那个文件名没有再单独写目录。
+`rpm -ql` 里带 `.service` 的是：
+
+- `/usr/lib/systemd/system/node_exporter.service`
+- `/usr/lib/systemd/system/prometheus-node-exporter.service`
+- `/usr/share/doc/node-exporter/examples/systemd/node_exporter.service`
 
 `promtool` 输出：`SUCCESS`，配置语法有效。
 
-`enable --now` 建了两个指向 `multi-user.target.wants` 的软链。`is-active` 按同一顺序都是 active。没有重启后再查。
+`enable --now` 在 `/etc/systemd/system/multi-user.target.wants/` 下建了两个软链，分别指向 `/usr/lib/systemd/system/prometheus-node-exporter.service` 和 `/usr/lib/systemd/system/prometheus.service`。`is-active` 按同一顺序都是 active。没有重启后再查。
 
 ```bash
 curl -fsS http://localhost:9100/metrics | grep '^node_memory_MemAvailable_bytes'
@@ -97,8 +101,8 @@ curl -fsS --get 'http://localhost:9090/api/v1/query' \
 
 ## 踩坑
 
-- `--available` 写成 `--avaliable`、`--availabel` → 拼写错了 → 改成 `--available`。那两次的报错原文没有记下来。
-- 通配写成 `*promethous*` → 少了一个 e，不是 `*prometheus*` → 改对。没有另记那次的输出。
+- `dnf list --avaliable`、`dnf list --availabel` → 分别报 `dnf list: error: unrecognized arguments: --avaliable` 和 `dnf list: error: unrecognized arguments: --availabel` → 改成 `--available`。
+- 通配写成 `*promethous*` → 把 prometheus 拼错了 → 改成 `*prometheus*`。
 - 去找 `node-exporter.service` → 包名不是单元名，这个单元不存在 → 用 `rpm -ql` 和 `systemctl cat` 确认，只启用 `prometheus-node-exporter.service`。
 - grep 写成 `node_memoey` → 指标名是 `node_memory`，所以没有行 → 改成 `node_memory_MemAvailable_bytes`。
 - 查询写成 `MemAvailabel` → 名字错了。`status` 仍是 success，`result` 是 `[]` → 查询成功但没有这条序列，不是 0，也不是监控故障。改成 `MemAvailable`。
@@ -106,8 +110,7 @@ curl -fsS --get 'http://localhost:9090/api/v1/query' \
 
 ## 卡点 / 没想明白的
 
-- 9100 上的 735866880 字节和 9090 里的 729673728 不是同一次读数。一个是当时 exporter 的输出，一个是已经采进库的样本。
-- 两个 value 前面的 unix 时间不换算，也不当成「一定是源样本被采集的那一刻」。
+- 9100 上的 735866880 字节和 9090 里的 729673728 不是同一次读数。一个是当时 exporter 的输出，一个是已经采进库的样本。即时查询里，`value` 的第一项是查询求值时间戳，不一定是原始样本的采集时间。这两个时间戳和数值都按输出原样留着。
 
 ## 面试题（5 道，对话中作答后批改）
 
