@@ -77,6 +77,7 @@
 | W7 | 11-21 | find：-type、-user、-name，无匹配时退出码仍可为 0 | [链接](labs/2026-11-21-find-type-user-name.md) |
 | W9 | 11-22 | Prometheus 首课：node1 本地 Prometheus 与 node_exporter | [链接](labs/2026-11-22-prometheus-node-exporter.md) |
 | W9 | 11-22 | Grafana 基础：3000、数据源 9090、可用内存面板（监控模块未全部完成） | [链接](labs/2026-11-22-grafana-prometheus-dashboard.md) |
+| W9 | 11-23 | Prometheus 告警规则：Inactive / Pending / Firing，未配通知 | [链接](labs/2026-11-23-prometheus-alert-rules.md) |
 
 ## 补缺口小课：RAID 与虚拟化
 
