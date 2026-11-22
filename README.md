@@ -75,7 +75,8 @@
 | W7 | 11-21 | 默认 ACL：只套到新建的文件和目录 | [链接](labs/2026-11-21-acl-default.md) |
 | W7 | 11-21 | 只读诊断：本机、固定 IP、VIP 与 keepalived 的正常状态 | [链接](labs/2026-11-21-readonly-diagnose-ha.md) |
 | W7 | 11-21 | find：-type、-user、-name，无匹配时退出码仍可为 0 | [链接](labs/2026-11-21-find-type-user-name.md) |
-| W9 | 11-22 | Prometheus 首课：node1 本地 Prometheus 与 node_exporter（Grafana 未开始） | [链接](labs/2026-11-22-prometheus-node-exporter.md) |
+| W9 | 11-22 | Prometheus 首课：node1 本地 Prometheus 与 node_exporter | [链接](labs/2026-11-22-prometheus-node-exporter.md) |
+| W9 | 11-22 | Grafana 基础：3000、数据源 9090、可用内存面板（监控模块未全部完成） | [链接](labs/2026-11-22-grafana-prometheus-dashboard.md) |
 
 ## 补缺口小课：RAID 与虚拟化
 
