@@ -76,7 +76,7 @@ sudo systemctl status prometheus-alertmanager --no-pager -l
 
 `amtool`：`SUCCESS`。Found global config、route、0 条 inhibit rules、1 个 receiver、0 个 templates。
 
-`enable --now` 在 multi-user.target.wants 下建了软链。`status`：active (running)，08:00:52 CST 起，enabled。监听 `[::]:9093`，没有 TLS。cluster 地址 `10.0.2.15:9094`（VirtualBox NAT）。08:01:03 gossip settled。没有开放 9094。软链两端的完整路径这次没有贴出。
+`enable --now` 输出：`Created symlink '/etc/systemd/system/multi-user.target.wants/prometheus-alertmanager.service' → '/usr/lib/systemd/system/prometheus-alertmanager.service'`。`status`：active (running)，08:00:52 CST 起，enabled。监听 `[::]:9093`，没有 TLS。cluster 地址 `10.0.2.15:9094`（VirtualBox NAT）。08:01:03 gossip settled。没有开放 9094。
 
 ```bash
 curl -i http://localhost:9093/-/ready
