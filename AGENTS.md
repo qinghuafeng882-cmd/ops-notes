@@ -16,10 +16,13 @@
 
 - `labs/`：实验笔记
 - `troubleshooting/`：排障复盘（已脱敏）
-- `skills/`：可复用流程
+- `skills/`：可复用流程（原始 Markdown 版）
+- `.agents/skills/`：Antigravity 规范适配版 Skill（`<name>/SKILL.md`，与 `skills/` 保持同步）
 - `cheatsheets/`：每周速查表，每学完一课把新内容补进当周的速查表
 
 ## 可用 Skill
+
+> 以下 4 个流程在 `skills/*.md` 与 `.agents/skills/<name>/SKILL.md` 双处保持同步；新增或修订 Skill 时需同步更新两处。
 
 - `skills/lab-wrapup.md`：实验收尾，把终端记录整理成笔记 + 面试题
 - `skills/triage-site-unreachable.md`：网站或服务连不上时（refused、No route、timed out、403），按报错分流，再逐层验证
