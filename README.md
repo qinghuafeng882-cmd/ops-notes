@@ -80,6 +80,7 @@
 | W9 | 11-23 | Prometheus 告警规则：Inactive / Pending / Firing，未配通知 | [链接](labs/2026-11-23-prometheus-alert-rules.md) |
 | W9 | 11-23 | Alertmanager 基础：本机接收，无对外通知 | [链接](labs/2026-11-23-alertmanager-basics.md) |
 | W9 | 11-23 | Alertmanager 静默：匹配、提前结束、恢复采集器 | [链接](labs/2026-11-23-alertmanager-silence.md) |
+| W9 | 11-23 | Alertmanager 分组：3 条测试告警分成 2 组，未测通知 | [链接](labs/2026-11-23-alertmanager-grouping.md) |
 
 ## 补缺口小课：RAID 与虚拟化
 
