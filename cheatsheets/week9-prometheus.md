@@ -66,3 +66,11 @@ Prometheus 只在 node1 本机采集。11-23 写过告警规则，并用 Windows
 - `silence expire` 没有输出。采集器仍停着时，告警回到 active。提前结束不是删告警。
 - 再 `start prometheus-node-exporter`，`/api/v2/alerts` 变成 `[]`。
 - 钟点是对话记录，不是精确的状态变化时刻。没有等满 10 分钟，没有做抑制，没有测通知送达，没有系统重启。
+
+## 分组（11-23）
+
+没有停服务，也没有改配置。`amtool alert add` 直接注入 3 条 `lab=grouping` 的测试告警。`instance` 是 `Lab-node-a`、`Lab-node-b`，大写 L，只是标签，不连接主机。
+
+`.../alerts/groups?filter=lab%3Dgrouping` 是 2 组：`Lab-node-a` 里 warning 和 critical 两条，`Lab-node-b` 里 1 条 warning。这是分组结果，不是已经发出合并通知。没有配 `inhibit_rules`。
+
+`alert add` 没有 `--duration`。annotation 不是 label。`filter%3Dgrouping` 和 `fliter` 都不算筛选成功。清理后的 `[]` 不能单独证明是提前清理，因为当时已经过了 `endsAt` 10:19:46。没有测通知投递，没有系统重启。
