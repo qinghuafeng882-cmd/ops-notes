@@ -82,6 +82,17 @@
 | W9 | 11-23 | Alertmanager 静默：匹配、提前结束、恢复采集器 | [链接](labs/2026-11-23-alertmanager-silence.md) |
 | W9 | 11-23 | Alertmanager 分组：3 条测试告警分成 2 组，未测通知 | [链接](labs/2026-11-23-alertmanager-grouping.md) |
 
+## 冲刺路线重组（2026-11-24 ~ 2027-01-19）
+
+> 目标：2027-01-19 前拿到成都 8000+ Linux 运维岗位 Offer。结合宿主机 16GB 内存条件及现有多年工作背景，原 W8 空缺与后续周次重组为求职导向冲刺路线，砍掉低频冷门扩展：
+
+| 阶段 | 计划时间 | 核心模块与交付物 | 状态 |
+|---|---|---|---|
+| **W9 续** | 11-24 ~ 11-29 | 监控闭环：Prometheus 跨机采集 `node2`、Alertmanager 真实通知与抑制、Nginx/MySQL Exporter | 进行中 |
+| **W8 补齐** | 11-30 ~ 12-06 | Docker 容器实战（Dockerfile / 网络 / 卷 / Compose）+ Ansible Inventory 与 Playbook | 未开始 |
+| **W10–W11** | 12-07 ~ 12-20 | 轻量 K8s（k3s，单/双节点各配 ≥2GB 内存，做 Deployment/Service/Ingress/Pod 排障）+ CI/CD 核心概念；简历定稿、`troubleshooting/` 案例沉淀并启动首批投递 | 未开始 |
+| **W12** | 12-21 ~ 01-19 | 真实面试复盘驱动，按面试反馈查漏补缺，冲刺 Offer | 未开始 |
+
 ## 补缺口小课：RAID 与虚拟化
 
 RHCSA 大纲不覆盖、但运维面试常问的两块，课外单独学习，下面是两次动手实验的完整报告。
