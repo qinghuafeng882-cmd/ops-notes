@@ -44,7 +44,7 @@ Prometheus 只在 node1 本机采集。11-23 写过告警规则，并用 Windows
 
 ## Alertmanager（11-23）
 
-包 `alertmanager`，服务 `prometheus-alertmanager.service`。9093 是 Web，9094 是集群。这次没有开放 9094，没有从 Windows 访问，没有做静默和抑制。
+包 `alertmanager`，服务 `prometheus-alertmanager.service`。9093 是 Web，9094 是集群。这次没有开放 9094，没有从 Windows 访问。抑制没做。静默见 `labs/2026-11-23-alertmanager-silence.md`。
 
 | 做什么 | 命令 / 事实 |
 |---|---|
@@ -56,3 +56,13 @@ Prometheus 只在 node1 本机采集。11-23 写过告警规则，并用 Windows
 | 恢复 | 启动 node_exporter 后再查，结果 `[]`。不是历史删除，也不是通知送达 |
 
 `for` 是规则持续阈值。`group_wait` 是新分组第一次通知前的汇集等待。`group_interval` 是已通知分组有变化后的间隔。`repeat_interval` 是没有新变化时的重复提醒。下划线名字本来有效，改成连字符不是修语法。示例配置里的密码记 `...`。
+
+## 静默（11-23）
+
+`amtool silence add` 不用 sudo。这次匹配 `alertname=NodeExporterDown` 和 `instance=localhost:9100`，两个都要满足。`--author=fqh`，`--duration=10m`，comment 是「个人实验：验证维护静默」。返回的 ID 是 `61de6ff6-d421-4e95-a2f5-c608b783ef1b`。
+
+- 静默不改 Prometheus 规则，也不修复故障。Firing 不会因此变成 Inactive。
+- 匹配上之后告警还在，`silencedBy` 含这个 ID，`state` 是 suppressed。没有通知渠道，所以没有验证外部通知被拦住。
+- `silence expire` 没有输出。采集器仍停着时，告警回到 active。提前结束不是删告警。
+- 再 `start prometheus-node-exporter`，`/api/v2/alerts` 变成 `[]`。
+- 钟点是对话记录，不是精确的状态变化时刻。没有等满 10 分钟，没有做抑制，没有测通知送达，没有系统重启。
