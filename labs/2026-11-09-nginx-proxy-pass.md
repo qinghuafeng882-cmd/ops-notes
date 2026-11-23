@@ -104,4 +104,4 @@ sudo sh -c 'tail -n 3 /var/log/httpd/*access_log'
 
 - [x] D+1（11-10）
 - [x] D+3（11-12，B1-1～B1-4 合并快问 4.5/5，本篇相关题全对）
-- [ ] D+7
+- [x] D+7（11-24，1/1（合并复习，五题合计 3.5/5，不是本篇单独 5 题）；location /p2 + proxy_pass .../ 字面替换成 //a.html 正确）
