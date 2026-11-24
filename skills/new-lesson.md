@@ -29,7 +29,7 @@ description: 讲授新课并带做实验：先讲清原理与术语，再分步�
    - 我在终端遇到报错、拼写错误或意外现象时，讲清底层原因（如 bash 重定向先于命令启动、SQL `near '...'` 定位、库名与表名混淆），留作笔记的「踩坑」素材。
 5. **实验结束后按 `skills/lab-wrapup.md` 收尾。**
    - 生成 `labs/YYYY-MM-DD-主题.md`，补进当周 `cheatsheets/weekN-*.md`。
-   - 在对话中出 5 道课后面试题（遵守 `skills/review-quiz.md`：一题一问、不超纲），我作答后批改并写入笔记，最后 `git add` / `commit` / `push`。
+   - 在对话中出 3～5 道课后面试题（按课体量弹性决定；遵守 `skills/review-quiz.md`：一题一问、不超纲），我作答后批改并写入笔记，最后 `git add` / `commit` / `push`。
 
 ## 不要做
 

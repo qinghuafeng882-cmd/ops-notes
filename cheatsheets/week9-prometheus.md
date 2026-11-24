@@ -74,3 +74,13 @@ Prometheus 只在 node1 本机采集。11-23 写过告警规则，并用 Windows
 `.../alerts/groups?filter=lab%3Dgrouping` 是 2 组：`Lab-node-a` 里 warning 和 critical 两条，`Lab-node-b` 里 1 条 warning。这是分组结果，不是已经发出合并通知。没有配 `inhibit_rules`。
 
 `alert add` 没有 `--duration`。annotation 不是 label。`filter%3Dgrouping` 和 `fliter` 都不算筛选成功。清理后的 `[]` 不能单独证明是提前清理，因为当时已经过了 `endsAt` 10:19:46。没有测通知投递，没有系统重启。
+
+## 跨机采集 node2（11-24）
+
+- **Pull 方向与防火墙**：`node1` Prometheus 主动拉 `node2:9100`，入站规则做在 `node2`；用富规则仅放行 `192.168.56.11` 访问 `9100/tcp`，不直接 `--add-port=9100/tcp`。
+- **node2 软件源**：Rocky 10 未开 EPEL 时先 `sudo dnf config-manager --set-enabled crb` 再装 `epel-release`，然后装 `node-exporter`（服务名 `prometheus-node-exporter`）。
+- **rich rule 掩码**：`source address` 写单个 IPv4 时可省略 `/32`；`--remove-rich-rule` 删规则需照抄 `--list-rich-rules` 规范化后的字符串（如 `port="9100"`）。
+- **热重载实证**：`ExecReload=/bin/kill -HUP $MAINPID` 是异步信号（`systemd` 先报 `Reloaded`，进程约百毫秒后才打印 `Completed loading of configuration file`）；要核对前后 `MainPID` 未变和 `journalctl` 日志。
+- **保留原 `instance`**：在 `job_name: node` 追加 `'192.168.56.12:9100'` 而保留 `'localhost:9100'`，避免把 `node1` 原有时间序列切分。
+- **单节点告警与面板**：`up{job="node"} == 0` 自动按 `instance` 独立评估与触发；Grafana 查询 `{job="node"}` 未限定 `instance` 时会自动叠加多台曲线。
+- **命令易错点**：`curl` 短选项合并用单 `-`（`-fsS`）；`--data-urlencode` 后用空格不加 `=`；`systemctl show -p MainPID --value` 不能漏 `-p`；指标名区分大小写（`MemAvailable`）。

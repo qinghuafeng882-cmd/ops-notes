@@ -33,7 +33,7 @@ description: >-
    - 用户遇到报错、拼写错误或意外现象时，先讲清底层原因（如 bash 重定向先于命令启动、SQL 定位、SELinux 域转换），留作笔记「踩坑」素材。
 5. **课后收尾与归档（遵循 `lab-wrapup`）。**
    - 按 `labs/_template.md` 生成 `labs/YYYY-MM-DD-主题.md`，并将新命令/事实补进当周 `cheatsheets/weekN-*.md`、更新 `README.md` 进度表；
-   - 在对话中出 **5 道课后面试题**（遵守 `review-quiz`：一题一问、不超纲），用户作答后批改并写入笔记；
+   - 在对话中出 **3～5 道课后面试题**（按课体量弹性决定；遵守 `review-quiz`：一题一问、不超纲），用户作答后批改并写入笔记；
    - 做脱敏检查后执行 `git add`、`git commit`、`git push`。
 
 ## 验证清单

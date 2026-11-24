@@ -2,7 +2,7 @@
 name: lab-wrapup
 description: >-
   Wraps up a Linux, RHCSA, or ops lab session by organizing real terminal logs into a structured
-  lab note, generating 5 interview questions, updating cheatsheets and README progress, and
+  lab note, generating 3-5 interview questions, updating cheatsheets and README progress, and
   committing/pushing after sanitization checks. Use when finishing a lab (even partially).
 ---
 
@@ -26,8 +26,8 @@ description: >-
    - 补充说明或推理必须明确标注「（推测）」。
 3. **提取「踩坑」**：从报错、拼写错误、重试、撤销操作中提取，每条写成「现象 → 原因 → 解决」。没有踩坑就写「无」，不要硬编。
 4. **填写「验证」表**：写清证明配置生效的命令、预期结果、实测结果，以及**重启后是否仍生效**。没验证过的明确写「未验证」或「未做」。
-5. **准备 5 道面试题（对话中作答并批改）**：
-   - 题型分布：1 道概念题 + 2 道排障题 + 1 道操作题 + 1 道取舍题；
+5. **准备 3～5 道面试题（按课体量弹性决定，对话中作答并批改）**：
+   - 题量与题型：轻量短课 3 题、核心实操课 5 题，不为了凑数硬拆水题；优先覆盖概念、排障与操作/取舍三类核心能力；
    - 严格一题一问、不超纲；每题附 `<details><summary>批改要点</summary>...</details>`；
    - 在对话中让用户作答并逐题批改，不要做成让用户课后自填的回忆单；作答后把实际得分与批改结果写入笔记。
 6. **标注复习起算日**：在 `## 复习记录` 写明起算日与预计 `D+1` / `D+3` / `D+7` 日期，保持 `- [ ]` 未勾选状态。
