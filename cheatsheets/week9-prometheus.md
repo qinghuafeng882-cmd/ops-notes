@@ -84,3 +84,12 @@ Prometheus 只在 node1 本机采集。11-23 写过告警规则，并用 Windows
 - **保留原 `instance`**：在 `job_name: node` 追加 `'192.168.56.12:9100'` 而保留 `'localhost:9100'`，避免把 `node1` 原有时间序列切分。
 - **单节点告警与面板**：`up{job="node"} == 0` 自动按 `instance` 独立评估与触发；Grafana 查询 `{job="node"}` 未限定 `instance` 时会自动叠加多台曲线。
 - **命令易错点**：`curl` 短选项合并用单 `-`（`-fsS`）；`--data-urlencode` 后用空格不加 `=`；`systemctl show -p MainPID --value` 不能漏 `-p`；指标名区分大小写（`MemAvailable`）。
+
+## Webhook 通知与抑制规则（11-25）
+
+- **SELinux 上下文**：`ps -efZ | grep '[a]lertmanager'` 为 `unconfined_service_t`，本机连接测试端口 `127.0.0.1:19099` 无需额外开布尔值。
+- **Webhook 接收端配置**：`webhook_configs` 写 `url` 与 `send_resolved: true`（默认开启，恢复时发送 `status: "resolved"`）；国内钉钉/飞书/企微要求特定 JSON 结构，需中间转换层，不能直接照搬 Alertmanager 标准 JSON。
+- **抑制规则三要素（v0.22+ 语法）**：`source_matchers`（源告警）、`target_matchers`（目标告警）、`equal: ['instance']`（必须相同标签才互压，漏写 `equal` 会跨实例误伤）。
+- **`inhibit_rules` vs `silence`**：两者都会使 `status.state` 变成 `suppressed`，看 `inhibitedBy` vs `silencedBy` 区分（驼峰大小写）；`inhibit_rules` 由源告警动态触发且源恢复后自动解除，`silence` 由人工按固定时间窗口手动控制。
+- **重定向与清理**：`>` 只在进程启动前由 bash 截断一次，常驻进程运行期间沿文件偏移量往后写；`pkill -f '/tmp/webhook_receiver.py'` 按完整命令行匹配，避免误杀其他 `python3`。
+- **实验收尾现状**：已停止测试端并切回 `receiver: lab-no-notification`（恢复 `group_wait: 30s`、`group_interval: 5m`），保留 `inhibit_rules` 在 `/etc/prometheus/alertmanager.yml` 中。

@@ -82,6 +82,7 @@
 | W9 | 11-23 | Alertmanager 静默：匹配、提前结束、恢复采集器 | [链接](labs/2026-11-23-alertmanager-silence.md) |
 | W9 | 11-23 | Alertmanager 分组：3 条测试告警分成 2 组，未测通知 | [链接](labs/2026-11-23-alertmanager-grouping.md) |
 | W9 | 11-24 | Prometheus 跨机采集 node2：CRB/EPEL、富规则、SIGHUP 热重载、单节点告警 | [链接](labs/2026-11-24-prometheus-scrape-node2.md) |
+| W9 | 11-25 | Alertmanager Webhook 真实通知（firing/resolved）与 inhibit_rules 抑制 | [链接](labs/2026-11-25-alertmanager-webhook-inhibit.md) |
 
 ## 冲刺路线重组（2026-11-24 ~ 2027-01-19）
 
