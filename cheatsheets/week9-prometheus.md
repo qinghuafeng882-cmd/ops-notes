@@ -93,3 +93,12 @@ Prometheus 只在 node1 本机采集。11-23 写过告警规则，并用 Windows
 - **`inhibit_rules` vs `silence`**：两者都会使 `status.state` 变成 `suppressed`，看 `inhibitedBy` vs `silencedBy` 区分（驼峰大小写）；`inhibit_rules` 由源告警动态触发且源恢复后自动解除，`silence` 由人工按固定时间窗口手动控制。
 - **重定向与清理**：`>` 只在进程启动前由 bash 截断一次，常驻进程运行期间沿文件偏移量往后写；`pkill -f '/tmp/webhook_receiver.py'` 按完整命令行匹配，避免误杀其他 `python3`。
 - **实验收尾现状**：已停止测试端并切回 `receiver: lab-no-notification`（恢复 `group_wait: 30s`、`group_interval: 5m`），保留 `inhibit_rules` 在 `/etc/prometheus/alertmanager.yml` 中。
+
+## Nginx Exporter 业务监控（11-26）
+
+- **两段式架构**：Nginx `stub_status`（`ngx_http_stub_status_module`，Rocky 10 自带）输出 4 行纯文本计数 → `nginx-prometheus-exporter` 翻译为 Prometheus `/metrics`（默认 `9113`）。
+- **包源与部署**：Rocky 10 / EPEL 10 无原生 Nginx/MySQL Exporter RPM，需从 GitHub Releases 下官方静态二进制；先 `tar -tzf` 看清单，`sudo install -m 0755 -o root -g root` 放入 `/usr/local/bin/` 并 `restorecon -v`（确保 `bin_t`）。
+- **`stub_status` 要点**：node1 上 `8080` 已占用，选择复用 SELinux `http_port_t` 默认已有且空闲的 `127.0.0.1:8008`；配 `allow 127.0.0.1; deny all;` 与 `access_log off;`（防监控轮询刷屏污染业务日志）。
+- **4 行统计**：`Active = Reading + Writing + Waiting`；`accepts > handled` 说明出现丢连接；keepalive 复用下 `requests >= handled`。
+- **托管与抓数**：专用系统用户 `nginx-exporter`（`/sbin/nologin`），运行在 `unconfined_service_t` 域；unit 放 `/etc/systemd/system/nginx-prometheus-exporter.service`，`--web.listen-address=127.0.0.1:9113`、`--nginx.scrape-uri=http://127.0.0.1:8008/stub_status`；`prometheus.yml` 目标写 `'127.0.0.1:9113'`。
+- **指标类型与故障边界**：`nginx_connections_active` 是瞬时值 Gauge；`nginx_http_requests_total` 是单调递增 Counter，用 `rate(nginx_http_requests_total{job="nginx"}[1m])` 算 QPS。停 Nginx 而 Exporter 仍在跑时，`up{job="nginx"}` 仍为 `1`，只有 `nginx_up{job="nginx"}` 变为 `0`。
