@@ -177,5 +177,5 @@ curl -sS http://localhost:9093/api/v2/alerts
 起算日是 11-23。这三项都还没做。
 
 - [x] D+1（11-24，1/1（合并复习，五题合计 3.5/5，不是本篇单独 5 题）；activeAlertmanagers 出现 9093 只证明 Prometheus 发现目标，不代表告警已送达 AM）
-- [ ] D+3（11-26）
+- [x] D+3（11-26，1/1（合并复习，六题合计 5/6，不是本篇单独 6 题）；`amtool check-config /etc/prometheus/alertmanager.yml`，注：普通用户需加 `sudo`）
 - [ ] D+7（11-30）

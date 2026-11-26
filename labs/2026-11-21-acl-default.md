@@ -130,5 +130,5 @@ sudo -u exam01 touch /srv/ops-exam/default-dir01/nested-file01.txt
 起算日是 11-21。
 
 - [x] D+1（11-22，1/1（合并复习，五题合计 4.5/5，不是本篇单独 5 题）；`setfacl -m d:u:exam02:rx /srv/ops-exam`）
-- [ ] D+3
+- [x] D+3（11-26，1/1（合并复习，六题合计 6/6，不是本篇单独 6 题）；默认 ACL 只在新建文件/目录创建时套用，不改变已有对象）
 - [ ] D+7
