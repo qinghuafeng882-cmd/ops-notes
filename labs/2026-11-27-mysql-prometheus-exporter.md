@@ -210,6 +210,6 @@ curl -fsS --get 'http://localhost:9090/api/v1/query' --data-urlencode 'query=mys
 
 起算日是 11-27。
 
-- [ ] D+1（11-28）
+- [x] D+1（11-28，2/2（合并复习，今日到期 5 篇 6 题合计 5/6、含 11-20 弱项回看 7 题总计 6/7，不是本篇单独 7 题）；完整写出 `rate(mysql_global_status_slow_queries{job="mysql"}[1m])` 并讲清 `Requires=` 导致 Exporter 被停、`up=0` 而 `mysql_up` 断采无新 `0` 样本；顺带提醒 unit 名为连字符 `mysqld-exporter.service`）
 - [ ] D+3（11-30）
 - [ ] D+7（12-04）
