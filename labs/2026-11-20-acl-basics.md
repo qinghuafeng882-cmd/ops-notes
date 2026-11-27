@@ -157,4 +157,4 @@ sudo setfacl -x u:exam02 /srv/ops-exam
 
 - [x] D+1（11-21，2/2（合并复习，六题合计 5.5/6，折合 4.58/5，不是 5/5，也不是本篇单独 5 题）；`sudo setfacl -m u:exam02:rx /srv/ops-exam` 1 分；`r-x` 与 mask `r--` 的有效权限是 `r--` 1 分）
 - [x] D+3（11-23，1/1（合并复习，五题合计 5/5，不是本篇单独 5 题）；`sudo setfacl -m u:exam02:rx /srv/ops-exam`）
-- [ ] D+7
+- [x] D+7（11-27，0.5/1（合并复习，今日到期 4 篇合计 3.5/4、含弱项回看 6 题总计 5.5/6，不是本篇单独 6 题）；答对 `group` 受 `mask` 限制，但误把 `other` 也算入受 `mask` 限制，已纠正 `mask` 不管 `owner` 和 `other`）
