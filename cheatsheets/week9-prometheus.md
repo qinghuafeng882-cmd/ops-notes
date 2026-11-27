@@ -102,3 +102,11 @@ Prometheus 只在 node1 本机采集。11-23 写过告警规则，并用 Windows
 - **4 行统计**：`Active = Reading + Writing + Waiting`；`accepts > handled` 说明出现丢连接；keepalive 复用下 `requests >= handled`。
 - **托管与抓数**：专用系统用户 `nginx-exporter`（`/sbin/nologin`），运行在 `unconfined_service_t` 域；unit 放 `/etc/systemd/system/nginx-prometheus-exporter.service`，`--web.listen-address=127.0.0.1:9113`、`--nginx.scrape-uri=http://127.0.0.1:8008/stub_status`；`prometheus.yml` 目标写 `'127.0.0.1:9113'`。
 - **指标类型与故障边界**：`nginx_connections_active` 是瞬时值 Gauge；`nginx_http_requests_total` 是单调递增 Counter，用 `rate(nginx_http_requests_total{job="nginx"}[1m])` 算 QPS。停 Nginx 而 Exporter 仍在跑时，`up{job="nginx"}` 仍为 `1`，只有 `nginx_up{job="nginx"}` 变为 `0`。
+
+## MySQL Exporter 业务监控（11-27）
+
+- **协议适配**：MySQL 无内置 HTTP `/metrics`，`mysqld_exporter`（默认 `9104`）收到抓取后用专用账号走 MySQL 协议执行 `SHOW GLOBAL STATUS` 等查询并转成指标；`mysql --version` 看的是客户端版本，看服务端用 `mysqld --version` 或 `SELECT VERSION();`。
+- **最小权限账号与凭据隔离**：`CREATE USER 'exporter'@'127.0.0.1' IDENTIFIED BY '...' WITH MAX_USER_CONNECTIONS 3;` + `GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.*`（8.4 立即生效无需 `FLUSH PRIVILEGES`）。`v0.15.0+` 已移除 `DATA_SOURCE_NAME`；密码用 `sudo vim` 写进 `0600`（属主 `mysqld-exporter`）的 `/etc/mysqld_exporter.cnf`（`[client]` 段），再以 `--config.my-cnf` 与 `--mysqld.address=127.0.0.1:3306` 传入，不进命令行与 bash 历史。
+- **包结构与 SELinux**：官方 `v0.21.0` tarball 内带一层 `mysqld_exporter-0.21.0.linux-amd64/` 子目录（先 `tar -tzf` 核对）；`install` 在 `/usr/local/bin/` 新建文件会继承 `bin_t`（不同于 `mv` 保留 `user_tmp_t`），仍保留 `restorecon -v` 兜底。注意二进制名下划线 `mysqld_exporter`，系统用户名/unit 名连字符 `mysqld-exporter`。
+- **unit 依赖与双层边界**：unit 只写 `After=mysqld.service` 不写 `Requires=`，保证 `mysqld` 停掉时 Exporter 继续活着报 `mysql_up 0`（此时 `up=1`、`mysql_up=0`；若 Exporter 自身也停，Prometheus 抓不到 `9104` 只有 `up=0`，收不到 `mysql_up=0` 样本）。
+- **v0.21.0 指标与 `PromQL info`**：无 `mysql_exporter_last_scrape_error`，改为 `mysql_exporter_collector_duration_seconds` 与 `mysql_exporter_collector_success`；`rate(mysql_global_status_queries{job="mysql"}[1m])` 因指标名未以 `_total` 结尾，Prometheus 3.x 会输出 `PromQL info` 提示，不影响计算。

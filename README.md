@@ -84,6 +84,7 @@
 | W9 | 11-24 | Prometheus 跨机采集 node2：CRB/EPEL、富规则、SIGHUP 热重载、单节点告警 | [链接](labs/2026-11-24-prometheus-scrape-node2.md) |
 | W9 | 11-25 | Alertmanager Webhook 真实通知（firing/resolved）与 inhibit_rules 抑制 | [链接](labs/2026-11-25-alertmanager-webhook-inhibit.md) |
 | W9 | 11-26 | Nginx Exporter：stub_status（127.0.0.1:8008）、二进制托管（9113）、rate() QPS 与 up/nginx_up 边界 | [链接](labs/2026-11-26-nginx-prometheus-exporter.md) |
+| W9 | 11-27 | MySQL Exporter：v0.21.0 二进制托管（9104）、最小权限与 0600 凭据隔离、rate() 与 up/mysql_up 边界 | [链接](labs/2026-11-27-mysql-prometheus-exporter.md) |
 
 ## 冲刺路线重组（2026-11-24 ~ 2027-01-19）
 
