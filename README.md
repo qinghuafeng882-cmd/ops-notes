@@ -85,6 +85,7 @@
 | W9 | 11-25 | Alertmanager Webhook 真实通知（firing/resolved）与 inhibit_rules 抑制 | [链接](labs/2026-11-25-alertmanager-webhook-inhibit.md) |
 | W9 | 11-26 | Nginx Exporter：stub_status（127.0.0.1:8008）、二进制托管（9113）、rate() QPS 与 up/nginx_up 边界 | [链接](labs/2026-11-26-nginx-prometheus-exporter.md) |
 | W9 | 11-27 | MySQL Exporter：v0.21.0 二进制托管（9104）、最小权限与 0600 凭据隔离、rate() 与 up/mysql_up 边界 | [链接](labs/2026-11-27-mysql-prometheus-exporter.md) |
+| W9 | 11-28 | W9 监控闭环收尾：Nginx/MySQL 双层告警、Grafana 四面板整合与整机重启持久性验收 | [链接](labs/2026-11-28-w9-monitoring-closure-alerts-grafana-reboot.md) |
 
 ## 冲刺路线重组（2026-11-24 ~ 2027-01-19）
 
@@ -92,7 +93,7 @@
 
 | 阶段 | 计划时间 | 核心模块与交付物 | 状态 |
 |---|---|---|---|
-| **W9 续** | 11-24 ~ 11-29 | 监控闭环：Prometheus 跨机采集 `node2`、Alertmanager 真实通知与抑制、Nginx/MySQL Exporter | 进行中 |
+| **W9 续** | 11-24 ~ 11-29 | 监控闭环：Prometheus 跨机采集 `node2`、Alertmanager 真实通知与抑制、Nginx/MySQL Exporter、业务告警与 Grafana/重启验收 | 已完成 |
 | **W8 补齐** | 11-30 ~ 12-06 | Docker 容器实战（Dockerfile / 网络 / 卷 / Compose）+ Ansible Inventory 与 Playbook | 未开始 |
 | **W10–W11** | 12-07 ~ 12-20 | 轻量 K8s（k3s，单/双节点各配 ≥2GB 内存，做 Deployment/Service/Ingress/Pod 排障）+ CI/CD 核心概念；简历定稿、`troubleshooting/` 案例沉淀并启动首批投递 | 未开始 |
 | **W12** | 12-21 ~ 01-19 | 真实面试复盘驱动，按面试反馈查漏补缺，冲刺 Offer | 未开始 |

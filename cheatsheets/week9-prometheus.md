@@ -110,3 +110,11 @@ Prometheus 只在 node1 本机采集。11-23 写过告警规则，并用 Windows
 - **包结构与 SELinux**：官方 `v0.21.0` tarball 内带一层 `mysqld_exporter-0.21.0.linux-amd64/` 子目录（先 `tar -tzf` 核对）；`install` 在 `/usr/local/bin/` 新建文件会继承 `bin_t`（不同于 `mv` 保留 `user_tmp_t`），仍保留 `restorecon -v` 兜底。注意二进制名下划线 `mysqld_exporter`，系统用户名/unit 名连字符 `mysqld-exporter`。
 - **unit 依赖与双层边界**：unit 只写 `After=mysqld.service` 不写 `Requires=`，保证 `mysqld` 停掉时 Exporter 继续活着报 `mysql_up 0`（此时 `up=1`、`mysql_up=0`；若 Exporter 自身也停，Prometheus 抓不到 `9104` 只有 `up=0`，收不到 `mysql_up=0` 样本）。
 - **v0.21.0 指标与 `PromQL info`**：无 `mysql_exporter_last_scrape_error`，改为 `mysql_exporter_collector_duration_seconds` 与 `mysql_exporter_collector_success`；`rate(mysql_global_status_queries{job="mysql"}[1m])` 因指标名未以 `_total` 结尾，Prometheus 3.x 会输出 `PromQL info` 提示，不影响计算。
+
+## 业务告警、Grafana 整合与重启持久性（11-28）
+
+- **双层业务告警（`/etc/prometheus/service_alerts.yml`）**：与 `node_alerts.yml` 分文件放置，并在 `prometheus.yml` 的 `rule_files` 显式引入；`NginxDown`（`nginx_up == 0`，`critical`）与 `MySQLDown`（`mysql_up == 0`，`critical`）盯业务探活，`ServiceExporterDown`（`up{job=~"nginx|mysql"} == 0`，`warning`）兜底 Exporter 自身宕机盲区。
+- **告警文本模板与校验**：`annotations.summary` 引用标签写双花括号 `{{ $labels.instance }}` / `{{ $labels.job }}`（不可漏 `$labels.`）；改规则先 `promtool check rules`，再 `promtool check config`，`SIGHUP` 重载遇错会中止并沿用旧规则。
+- **Grafana 整合与排障读图**：`Options -> Legend -> Custom` 简化标签；`Stat` 面板用 `Value mappings`（`1 -> UP`、`0 -> DOWN`）配 `Stat styles`（`Graph mode: None`、`Color mode: Background`、`Text alignment: Center`）；QPS 面板单位设 `reqps`；曲线空白断档代表「无样本」，不是数值 `0`。
+- **常用文本/服务细节**：`grep -o` 只打印正则匹配到的片段（配合 `grep -oE '"(name|state)":"[^"]+"'` 抽 JSON 字段）；`systemctl start A B` 中 `A` 拼错报错时 `B` 仍会执行。
+- **整机重启验收（`node1`）**：8 个监控/业务服务全为 `enabled` 且重启后自动 `active`，`grafana_can_tcp_connect_prometheus_port` 保持 `on`，`3000/tcp` 保持 `yes`，5 个抓取目标 `up`、业务存活指标、4 条告警规则及 Windows 浏览器访问全部自动恢复。
